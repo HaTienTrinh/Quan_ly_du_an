@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Middleware;
+namespace App\Http\Middleware;
 
 use App\Models\User;
 use Closure;
@@ -18,7 +18,7 @@ class AdminMiddleware
 
         /** @var User $user */
         $user = Auth::user();
-
+        
         if (!$user->isAdmin()) {
             abort(403, 'Bạn không có quyền truy cập trang này.');
         }
