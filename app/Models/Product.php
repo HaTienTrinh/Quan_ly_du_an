@@ -61,6 +61,20 @@ class Product extends Model
         return $this->sale_price ?? $this->price;
     }
 
+    // URL ảnh đại diện cho sản phẩm
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if (empty($this->thumbnail)) {
+            return null;
+        }
+
+        if (Str::startsWith($this->thumbnail, ['http://', 'https://'])) {
+            return $this->thumbnail;
+        }
+
+        return asset('storage/'.$this->thumbnail);
+    }
+
     // Kiểm tra còn hàng không
     public function isInStock(): bool
     {
