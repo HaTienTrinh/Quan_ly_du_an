@@ -95,14 +95,17 @@
                             <td>{{ number_format($product->stock) }}</td>
                             <td class="pe-4 text-end">
                                 <div class="d-inline-flex gap-1">
-                                    <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-secondary">
+                                    <a href="{{ route('admin.products.show', $product) }}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-secondary" title="Chỉnh sửa">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <form action="{{ route('admin.products.destroy', $product) }}" method="post" class="d-inline"
                                           onsubmit="return confirm('Chuyển sản phẩm «{{ $product->name }}» vào thùng rác?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa mềm">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
