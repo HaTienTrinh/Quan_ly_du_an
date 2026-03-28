@@ -45,7 +45,10 @@ Route::prefix('admin')
     Route::resource('categories', CategoryController::class);
 
     // Sprint 3 — Quản lý sản phẩm
-    Route::resource('products', ProductController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+    Route::get('products/trashed', [ProductController::class, 'trashed'])->name('products.trashed');
+    Route::patch('products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+    Route::delete('products/{id}/force-delete', [ProductController::class, 'forceDestroy'])->name('products.force-destroy');
+    Route::resource('products', ProductController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
     // Sprint 4 — Quản lý tài khoản
     // Route::resource('users', Admin\UserController::class);

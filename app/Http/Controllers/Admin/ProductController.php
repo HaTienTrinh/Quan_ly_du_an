@@ -106,18 +106,61 @@ class ProductController extends Controller
             ->with('success', 'Đã cập nhật sản phẩm thành công.');
     }
 
+    public function destroy(Product $product)
+    {
+        $product->delete();
+
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'Đã chuyển sản phẩm vào thùng rác.');
+    }
+
+    public function trashed(Request $request)
+    {
+        $query = Product::onlyTrashed()->with('category');
+
+        if ($request->filled('q')) {
+            $search = $request->string('q')->trim();
+            $query->where(function ($query) use ($search) {
+                $query->where('name', 'like', '%'.$search.'%')
+                      ->orWhere('slug', 'like', '%'.$search.'%');
+            });
+        }
+
+        $products = $query->latest('deleted_at')->paginate(15)->withQueryString();
+
+        return view('admin.products.trashed', compact('products'));
+    }
+
+    public function restore(int $id)
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+        $product->restore();
+
+        return redirect()
+            ->route('admin.products.trashed')
+            ->with('success', 'Đã khôi phục sản phẩm «'.$product->name.'».');
+    }
+
+    public function forceDestroy(int $id)
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+
+        if ($product->thumbnail && !Str::startsWith($product->thumbnail, ['http://', 'https://'])) {
+            Storage::disk('public')->delete($product->thumbnail);
+        }
+
+        $product->forceDelete();
+
+        return redirect()
+            ->route('admin.products.trashed')
+            ->with('success', 'Đã xóa vĩnh viễn sản phẩm «'.$product->name.'».');
+    }
+
     /**
      * Display the specified resource.
      */
     public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
     {
         //
     }

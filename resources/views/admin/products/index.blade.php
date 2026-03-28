@@ -36,7 +36,10 @@
                 </div>
             @endif
         </form>
-        <div class="d-flex flex-shrink-0">
+        <div class="d-flex flex-shrink-0 gap-2">
+            <a href="{{ route('admin.products.trashed') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-trash3 me-1"></i> Đã xóa
+            </a>
             <a href="{{ route('admin.products.create') }}" class="btn text-white" style="background: linear-gradient(135deg, #f97316, #ea580c);">
                 <i class="bi bi-plus-lg me-1"></i> Thêm sản phẩm
             </a>
@@ -91,9 +94,19 @@
                             </td>
                             <td>{{ number_format($product->stock) }}</td>
                             <td class="pe-4 text-end">
-                                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
+                                <div class="d-inline-flex gap-1">
+                                    <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('admin.products.destroy', $product) }}" method="post" class="d-inline"
+                                          onsubmit="return confirm('Chuyển sản phẩm «{{ $product->name }}» vào thùng rác?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
