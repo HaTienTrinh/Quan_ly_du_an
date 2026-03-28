@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Customer\HomeController;
@@ -37,7 +38,10 @@ Route::prefix('admin')
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Sprint 2 — Quản lý danh mục
-    // Route::resource('categories', Admin\CategoryController::class);
+    Route::get('categories/trashed', [CategoryController::class, 'trashed'])->name('categories.trashed');
+    Route::patch('categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
+    Route::delete('categories/{id}/force-delete', [CategoryController::class, 'forceDestroy'])->name('categories.force-destroy');
+    Route::resource('categories', CategoryController::class);
 
     // Sprint 3 — Quản lý sản phẩm
     // Route::resource('products', Admin\ProductController::class);
