@@ -45,7 +45,7 @@ Route::prefix('admin')
     Route::resource('categories', CategoryController::class);
 
     // Sprint 3 — Quản lý sản phẩm
-    Route::resource('products', ProductController::class)->only(['index', 'create', 'store']);
+    Route::resource('products', ProductController::class)->only(['index', 'create', 'store', 'edit', 'update']);
 
     // Sprint 4 — Quản lý tài khoản
     // Route::resource('users', Admin\UserController::class);

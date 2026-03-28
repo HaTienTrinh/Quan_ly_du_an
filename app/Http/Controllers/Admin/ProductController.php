@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -70,23 +71,45 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
+    public function edit(Product $product)
+    {
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+
+        return view('admin.products.edit', compact('product', 'categories'));
+    }
+
+    public function update(Request $request, Product $product)
+    {
+        $data = $request->validate([
+            'category_id' => ['required', 'exists:categories,id'],
+            'name'        => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'price'       => ['required', 'numeric', 'min:0'],
+            'sale_price'  => ['nullable', 'numeric', 'min:0', 'lte:price'],
+            'stock'       => ['required', 'integer', 'min:0'],
+            'thumbnail'   => ['nullable', 'image', 'max:4096'],
+        ]);
+
+        $data['is_active'] = $request->boolean('is_active');
+
+        if ($request->hasFile('thumbnail')) {
+            if ($product->thumbnail && !Str::startsWith($product->thumbnail, ['http://', 'https://'])) {
+                Storage::disk('public')->delete($product->thumbnail);
+            }
+            $data['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
+        }
+
+        $product->update($data);
+
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'Đã cập nhật sản phẩm thành công.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
     public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
     {
         //
     }

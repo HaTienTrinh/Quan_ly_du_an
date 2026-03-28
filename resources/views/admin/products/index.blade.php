@@ -54,6 +54,7 @@
                         <th>Giá</th>
                         <th>Trạng thái</th>
                         <th>Tồn kho</th>
+                        <th class="pe-4 text-end" style="min-width: 160px;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -89,6 +90,11 @@
                                 @endif
                             </td>
                             <td>{{ number_format($product->stock) }}</td>
+                            <td class="pe-4 text-end">
+                                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
