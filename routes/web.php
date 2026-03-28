@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Customer\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -44,7 +45,7 @@ Route::prefix('admin')
     Route::resource('categories', CategoryController::class);
 
     // Sprint 3 — Quản lý sản phẩm
-    // Route::resource('products', Admin\ProductController::class);
+    Route::resource('products', ProductController::class)->only(['index']);
 
     // Sprint 4 — Quản lý tài khoản
     // Route::resource('users', Admin\UserController::class);

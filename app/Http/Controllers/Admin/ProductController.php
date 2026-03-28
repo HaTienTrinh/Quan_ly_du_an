@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -10,9 +11,26 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = Product::with('category');
+
+        if ($request->filled('q')) {
+            $query->where(function ($query) use ($request) {
+                $query->where('name', 'like', '%'.$request->q.'%')
+                      ->orWhere('slug', 'like', '%'.$request->q.'%');
+            });
+        }
+
+        if ($request->status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($request->status === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        $products = $query->latest()->paginate(15)->withQueryString();
+
+        return view('admin.products.index', compact('products'));
     }
 
     /**
