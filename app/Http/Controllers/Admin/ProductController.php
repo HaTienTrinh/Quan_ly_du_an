@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -33,20 +35,36 @@ class ProductController extends Controller
         return view('admin.products.index', compact('products'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $categories = Category::where('is_active', true)->orderBy('name')->get();
+
+        return view('admin.products.create', compact('categories'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'category_id' => ['required', 'exists:categories,id'],
+            'name'        => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'price'       => ['required', 'numeric', 'min:0'],
+            'sale_price'  => ['nullable', 'numeric', 'min:0', 'lte:price'],
+            'stock'       => ['required', 'integer', 'min:0'],
+            'thumbnail'   => ['nullable', 'image', 'max:4096'],
+        ]);
+
+        $data['is_active'] = $request->boolean('is_active');
+
+        if ($request->hasFile('thumbnail')) {
+            $data['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
+        }
+
+        Product::create($data);
+
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'Đã thêm sản phẩm thành công.');
     }
 
     /**

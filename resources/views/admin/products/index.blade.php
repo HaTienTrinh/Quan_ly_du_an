@@ -36,6 +36,11 @@
                 </div>
             @endif
         </form>
+        <div class="d-flex flex-shrink-0">
+            <a href="{{ route('admin.products.create') }}" class="btn text-white" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                <i class="bi bi-plus-lg me-1"></i> Thêm sản phẩm
+            </a>
+        </div>
     </div>
 
     <div class="stat-card overflow-hidden">
@@ -55,8 +60,8 @@
                     @forelse($products as $product)
                         <tr>
                             <td class="ps-4">
-                                @if($product->thumbnail)
-                                    <img src="{{ asset('storage/'.$product->thumbnail) }}" alt="{{ $product->name }}" class="rounded border" width="56" height="56" style="object-fit: cover;">
+                                @if($product->thumbnail_url)
+                                    <img src="{{ $product->thumbnail_url }}" alt="{{ $product->name }}" class="rounded border" width="56" height="56" style="object-fit: cover;">
                                 @else
                                     <div class="rounded bg-light border d-flex align-items-center justify-content-center text-muted" style="width:56px;height:56px;">
                                         <i class="bi bi-box-seam" style="font-size: 1.25rem;"></i>
