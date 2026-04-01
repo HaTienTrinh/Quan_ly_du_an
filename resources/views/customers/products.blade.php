@@ -1,50 +1,127 @@
 @extends('customers.layouts.layout')
 
-@section('title', 'Sản phẩm')
+@section('title', 'Cửa hàng - Luna Steps')
 
 @section('content')
-    <main class="max-w-7xl mx-auto px-12 pt-20 pb-32">
-        <header class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-            <div>
-                <span class="text-orange-500 font-bold tracking-[0.3em] text-sm uppercase mb-4 block">Bộ sưu tập</span>
-                <h2 class="text-5xl font-extrabold">Sản phẩm nổi bật</h2>
-            </div>
-            <p class="max-w-lg text-gray-400 text-sm leading-relaxed">
-                Những thiết kế được yêu thích nhất với kiểu dáng hiện đại, đế êm và phối màu ấn tượng cho cả đi chơi lẫn vận
-                động nhẹ.
-            </p>
-        </header>
+<style>
+    .filter-group input[type="checkbox"]:checked + label { color: #f97316; font-weight: bold; }
+    .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid #f1f5f9; }
+</style>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            @foreach ($products as $product)
-                <div class="glass p-8 rounded-[40px] group hover:border-orange-500/50 transition-all duration-500">
-                    <div class="flex justify-between items-center mb-6">
-                        <span
-                            class="{{ $product['badge_bg'] }} px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase">
+<main class="bg-white min-h-screen">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 py-12">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
+            <div>
+                <h2 class="text-4xl font-black text-slate-900">Tất cả sản phẩm</h2>
+                <p class="text-slate-400 text-sm mt-1">Tìm thấy {{ $products->count() }} kết quả phù hợp</p>
+            </div>
+            
+            <form action="/san-pham" method="GET" class="relative w-full md:w-96">
+                <input type="text" name="search" value="{{ request('search') }}" 
+                    placeholder="Tìm kiếm mẫu giày..." 
+                    class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-orange-500 focus:bg-white transition-all shadow-sm">
+                <svg class="w-5 h-5 absolute left-4 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </form>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <aside class="w-full lg:w-64 space-y-10">
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-widest text-slate-900 mb-6 border-b pb-2">Danh mục</h4>
+                    <div class="space-y-4 filter-group">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="cat1" class="w-4 h-4 accent-orange-500">
+                            <label for="cat1" class="text-sm text-slate-600 cursor-pointer hover:text-orange-500 transition">Running</label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="cat2" class="w-4 h-4 accent-orange-500">
+                            <label for="cat2" class="text-sm text-slate-600 cursor-pointer hover:text-orange-500 transition">Streetwear</label>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="cat3" class="w-4 h-4 accent-orange-500">
+                            <label for="cat3" class="text-sm text-slate-600 cursor-pointer hover:text-orange-500 transition">Classic</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+    <!-- Title -->
+    <h4 class="text-sm font-black uppercase tracking-widest text-slate-700 flex items-center gap-2">
+        <span class="w-2 h-2 bg-orange-400 rounded-full"></span>
+        Khoảng giá
+    </h4>
+
+    <!-- Select -->
+    <div class="relative">
+        <select class="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 
+        focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition">
+            
+            <option>Tất cả giá</option>
+            <option>Dưới 1.000.000đ</option>
+            <option>1.000.000đ - 2.000.000đ</option>
+            <option>Trên 2.000.000đ</option>
+        </select>
+
+        <!-- Icon dropdown -->
+        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+            ▼
+        </div>
+    </div>
+</div>
+
+                <div class="bg-slate-900 rounded-[32px] p-6 text-white overflow-hidden relative">
+                    <p class="text-[10px] font-bold text-orange-400 mb-2 uppercase">Member Only</p>
+                    <h5 class="text-lg font-bold mb-4 leading-tight">Giảm ngay 10% <br>cho đơn đầu tiên</h5>
+                    <button class="text-[10px] font-black uppercase bg-orange-500 text-black px-4 py-2 rounded-lg">Đăng ký</button>
+                    <div class="absolute -bottom-2 -right-4 text-5xl opacity-20 rotate-[-20deg]">👟</div>
+                </div>
+            </aside>
+
+            <div class="flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                    @forelse($products as $product)
+                    <div class="glass-light p-6 rounded-[32px] group relative">
+                        <span class="absolute top-8 left-8 z-10 bg-white shadow-sm text-slate-900 text-[10px] font-black px-3 py-1 rounded-full">
                             {{ $product['category'] }}
                         </span>
-                        <span class="text-gray-400 font-medium text-sm">{{ $product['price'] }}</span>
+
+                        <div class="aspect-square bg-slate-50 rounded-[24px] mb-6 relative flex items-center justify-center overflow-hidden border border-slate-50">
+                            <div class="text-8xl transform group-hover:scale-110 group-hover:-rotate-12 transition duration-700 drop-shadow-xl">
+                                {{ $product['img'] }}
+                            </div>
+                        </div>
+
+                        <div class="space-y-1 mb-6">
+                            <h4 class="text-lg font-bold text-slate-900 group-hover:text-orange-500 transition truncate">
+                                {{ $product['name'] }}
+                            </h4>
+                            <p class="text-slate-400 text-xs font-medium">Phong cách & Năng động</p>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-black text-slate-900">
+                                {{ number_format($product['price'], 0, ',', '.') }}đ
+                            </span>
+                            <button class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-orange-500 transition-all shadow-lg hover:shadow-orange-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-
-                    <div
-                        class="aspect-[4/3] bg-gradient-to-br {{ $product['color'] }} rounded-[30px] mb-8 relative flex items-center justify-center overflow-hidden shadow-inner">
-                        <div class="w-32 h-6 bg-black/20 rounded-full blur-xl absolute bottom-8 rotate-[-15deg]"></div>
-                        <div
-                            class="text-7xl transform group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500 drop-shadow-2xl">
-                            👟</div>
+                    @empty
+                    <div class="col-span-full py-20 text-center">
+                        <p class="text-slate-400">Không tìm thấy sản phẩm nào phù hợp với từ khóa "{{ request('search') }}".</p>
                     </div>
-
-                    <h3 class="text-2xl font-bold mb-4">{{ $product['name'] }}</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed mb-8 h-12 overflow-hidden">
-                        {{ $product['desc'] }}
-                    </p>
-
-                    <button
-                        class="w-fit px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-orange-500 hover:text-black transition-all duration-300">
-                        Xem chi tiết
-                    </button>
+                    @endforelse
                 </div>
-            @endforeach
+            </div>
+
         </div>
-    </main>
+    </div>
+</main>
 @endsection

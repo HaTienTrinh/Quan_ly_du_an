@@ -41,10 +41,18 @@
         </div>
 
         <ul class="hidden md:flex items-center gap-8 text-sm font-medium uppercase tracking-widest text-gray-300">
-            <li><a href="{{ route('home') }}" class="text-white border-b-2 border-orange-500 pb-1">Trang chủ</a></li>
-            <li><a href="{{ route('products') }}" class="hover:text-orange-500 transition">Sản phẩm</a></li>
-            <li><a href="{{ route('posts') }}" class="hover:text-orange-500 transition">Tin tức</a></li>
-            <li><a href="{{ route('contact') }}" class="hover:text-orange-500 transition">Liên hệ</a></li>
+            <li><a href="{{ route('home') }}"
+                    class="{{ Route::currentRouteName() === 'home' ? 'text-white border-b-2 border-orange-500 pb-1' : 'hover:text-orange-500 transition' }}">Trang
+                    chủ</a></li>
+            <li><a href="{{ route('products') }}"
+                    class="{{ Route::currentRouteName() === 'products' ? 'text-white border-b-2 border-orange-500 pb-1' : 'hover:text-orange-500 transition' }}">Sản
+                    phẩm</a></li>
+            <li><a href="{{ route('posts') }}"
+                    class="{{ Route::currentRouteName() === 'posts' ? 'text-white border-b-2 border-orange-500 pb-1' : 'hover:text-orange-500 transition' }}">Tin
+                    tức</a></li>
+            <li><a href="{{ route('contact') }}"
+                    class="{{ Route::currentRouteName() === 'contact' ? 'text-white border-b-2 border-orange-500 pb-1' : 'hover:text-orange-500 transition' }}">Liên
+                    hệ</a></li>
         </ul>
 
         <div class="flex items-center gap-6">
@@ -153,6 +161,10 @@
             </div>
         </div>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous">
+    </script>
 </body>
 
 </html>
