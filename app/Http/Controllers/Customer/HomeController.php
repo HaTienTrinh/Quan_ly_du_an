@@ -11,13 +11,48 @@ class HomeController extends Controller
 {
     public function index()
     {
-        return view('customers.home');
+        $products = Product::query()
+            ->active()
+            ->inStock()
+            ->with('category')
+            ->limit(6)
+            ->get();
+
+        return view('customers.home', compact('products'));
     }
 
     public function product()
     {
-        $products = Product::all();
+        $products = Product::query()
+            ->active()
+            ->inStock()
+            ->with('category')
+            ->orderByDesc('created_at')
+            ->get();
+
         return view('customers.products', compact('products'));
+    }
+
+    public function show(Product $product)
+    {
+        // Kiểm tra sản phẩm có active không
+        if (!$product->is_active) {
+            abort(404);
+        }
+
+        $product->load('category', 'images');
+
+        // Lấy sản phẩm liên quan (cùng danh mục)
+        $relatedProducts = Product::query()
+            ->active()
+            ->inStock()
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->with('category')
+            ->limit(4)
+            ->get();
+
+        return view('customers.products.show', compact('product', 'relatedProducts'));
     }
 
     public function contact()
@@ -27,15 +62,18 @@ class HomeController extends Controller
 
     public function post()
     {
-        $featuredPost = [
-            'title' => 'Top 10 mẫu giày thể thao hot nhất 2026',
-            'category' => 'Xu hướng',
-            'date' => '21/01/2026',
-            'author' => 'Nguyễn Văn A',
-            'desc' => 'Khám phá những mẫu giày thể thao được yêu thích nhất trong năm nay với thiết kế độc đáo và công nghệ tiên tiến...',
-            'image' => 'https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop'
-        ];
-        $posts = Post::all();
+        $featuredPost = Post::query()
+            ->published()
+            ->with('author')
+            ->inRandomOrder()
+            ->first();
+
+        $posts = Post::query()
+            ->published()
+            ->with('author')
+            ->orderByDesc('published_at')
+            ->get();
+
         return view('customers.posts', compact('featuredPost', 'posts'));
     }
 }
