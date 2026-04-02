@@ -11,13 +11,25 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $products = Product::all();
+        $products = Product::query()
+            ->active()
+            ->inStock()
+            ->with('category')
+            ->limit(6)
+            ->get();
+
         return view('customers.home', compact('products'));
     }
 
     public function product()
     {
-        $products = Product::all();
+        $products = Product::query()
+            ->active()
+            ->inStock()
+            ->with('category')
+            ->orderByDesc('created_at')
+            ->get();
+
         return view('customers.products', compact('products'));
     }
 
