@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Session;
 
 class OrderController extends Controller
 {
+    private const SHIPPING_FEE = 30000;
+
     /**
      * Xem trang thanh toán
      */
@@ -23,10 +25,9 @@ class OrderController extends Controller
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng trống');
         }
 
-        $total = 0;
-        foreach ($cart as $item) {
-            $total += $item['subtotal'];
-        }
+        $total = collect($cart)->sum('subtotal');
+        $shippingFee = self::SHIPPING_FEE;
+        $totalAmount = $total + $shippingFee;
 
         $user = Auth::user();
 
@@ -36,6 +37,8 @@ class OrderController extends Controller
         return view('customers.checkout.checkout', [
             'cart' => $cart,
             'total' => $total,
+            'shippingFee' => $shippingFee,
+            'totalAmount' => $totalAmount,
             'user' => $user,
             'latestAddress' => $latestAddress,
         ]);
@@ -66,13 +69,10 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
-            $subtotal = 0;
-            foreach ($cart as $item) {
-                $subtotal += $item['subtotal'];
-            }
+            $subtotal = collect($cart)->sum('subtotal');
 
             // Tính phí vận chuyển (có thể tùy chỉnh)
-            $shippingFee = 30000; // 30,000 VND
+            $shippingFee = self::SHIPPING_FEE; // 30,000 VND
 
             $totalAmount = $subtotal + $shippingFee;
 
@@ -117,7 +117,9 @@ class OrderController extends Controller
             // Xóa giỏ hàng
             Session::forget('cart');
 
-            return redirect()->route('orders.confirmation', $order->id)->with('success', 'Đơn hàng được tạo thành công');
+            // Chuyển sang trang trạng thái đơn hàng sau khi đặt thành công
+            return redirect()->route('orders.confirmation', $order->id)
+                ->with('success', 'Đặt hàng thành công! Đang chuyển sang trang trạng thái đơn.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());

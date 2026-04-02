@@ -19,7 +19,7 @@
                 <!-- Product Images -->
                 <div class="flex flex-col gap-4">
                     <div
-                        class="aspect-square bg-slate-50 rounded-[32px] overflow-hidden flex items-center justify-center border">
+                        class=" aspect-square bg-slate-50 rounded-[32px] overflow-hidden flex items-center justify-center border">
                         @if ($product->thumbnail)
                             <img id="mainImage" src="{{ asset('storage/' . $product->thumbnail) }}"
                                 alt="{{ $product->name }}" class="w-full h-full object-cover">
@@ -112,7 +112,7 @@
                             @csrf
                             <div class="flex items-center gap-4 mb-4">
                                 <label class="text-slate-700 font-semibold">Số lượng:</label>
-                                <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden">
+                                <div class="flex text-gray-500 items-center border border-slate-300 rounded-lg overflow-hidden">
                                     <input type="number" name="quantity" value="1" min="1"
                                         max="{{ $product->stock }}" class="w-16 text-center bg-white focus:outline-none">
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">

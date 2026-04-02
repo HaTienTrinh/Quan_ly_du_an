@@ -68,6 +68,9 @@ class Order extends Model
     ];
 
     const PAYMENT_LABELS = [
+        'cash'          => 'Thanh toán khi nhận hàng',
+        'credit_card'   => 'VNPay',
+        'bank_transfer' => 'Chuyển khoản ngân hàng',
         'cod'           => 'Thanh toán khi nhận hàng',
         'bank_transfer' => 'Chuyển khoản ngân hàng',
         'momo'          => 'Ví MoMo',
@@ -91,7 +94,32 @@ class Order extends Model
 
     public function getPaymentLabelAttribute(): string
     {
-        return self::PAYMENT_LABELS[$this->payment_method] ?? $this->payment_method;
+        return [
+            'cash' => 'Thanh toán khi nhận hàng',
+            'credit_card' => 'VNPay',
+            'bank_transfer' => 'Chuyển khoản ngân hàng',
+            'cod' => 'Thanh toán khi nhận hàng',
+            'momo' => 'Ví MoMo',
+            'vnpay' => 'VNPay',
+        ][$this->payment_method] ?? $this->payment_method;
+    }
+
+    public function getPaymentMethodAttribute($value): string
+    {
+        return match ($value) {
+            'cod' => 'cash',
+            'vnpay' => 'credit_card',
+            default => $value,
+        };
+    }
+
+    public function setPaymentMethodAttribute($value): void
+    {
+        $this->attributes['payment_method'] = match ($value) {
+            'cash' => 'cod',
+            'credit_card' => 'vnpay',
+            default => $value,
+        };
     }
 
     public function getFullAddressAttribute(): string
