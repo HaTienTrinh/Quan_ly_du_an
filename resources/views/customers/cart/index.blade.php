@@ -90,13 +90,15 @@
                                                     @method('PUT')
                                                     <div
                                                         class="flex items-center border border-gray-600 rounded-lg overflow-hidden">
-                                                        <a href="{{ route('cart.update', ['product_id' => $item['product_id'], 'quantity' => $item['quantity'] - 1]) }}"
-                                                            class="px-3 py-2 hover:bg-white/10">-</a>
+                                                        <button type="button"
+                                                            onclick="var qty=this.closest('form').querySelector('input[name=quantity]'); if(qty.value>1)qty.stepDown();"
+                                                            class="px-3 py-2 hover:bg-white/10">-</button>
                                                         <input type="number" name="quantity"
                                                             value="{{ $item['quantity'] }}" min="1"
                                                             class="w-12 text-center bg-transparent">
-                                                        <a href="{{ route('cart.update', ['product_id' => $item['product_id'], 'quantity' => $item['quantity'] + 1]) }}"
-                                                            class="px-3 py-2 hover:bg-white/10">+</a>
+                                                        <button type="button"
+                                                            onclick="var qty=this.closest('form').querySelector('input[name=quantity]'); qty.stepUp();"
+                                                            class="px-3 py-2 hover:bg-white/10">+</button>
                                                     </div>
                                                     <button type="submit"
                                                         class="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg text-sm font-medium transition">
@@ -110,10 +112,15 @@
                                                 <div class="text-lg font-bold text-white mb-3">
                                                     {{ number_format($item['subtotal'], 0, ',', '.') }} ₫
                                                 </div>
-                                                <a href="{{ route('cart.remove', $item['product_id']) }}"
-                                                    class="inline-block px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition">
-                                                    Xóa
-                                                </a>
+                                                <form action="{{ route('cart.remove', $item['product_id']) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                        class="inline-block px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition">
+                                                        Xóa
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>

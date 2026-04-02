@@ -111,7 +111,8 @@
                     @else
                         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                             @foreach ($products as $product)
-                                <div class="glass-light p-6 rounded-[32px] group relative">
+                                <a href="{{ route('products.show', $product->id) }}"
+                                    class="glass-light p-6 rounded-[32px] group relative block hover:shadow-lg transition">
                                     @if ($product->category)
                                         <span
                                             class="absolute top-8 left-8 z-10 bg-white shadow-sm text-slate-900 text-[10px] font-black px-3 py-1 rounded-full">
@@ -140,37 +141,26 @@
                                     </div>
 
                                     <div class="flex justify-between items-center">
-                                        <span class="text-lg font-black text-slate-900">
-                                            {{ number_format($product->price, 0, ',', '.') }}đ
-                                        </span>
-                                        @auth
-                                            <form action="{{ route('cart.add') }}" method="POST" class="inline">
-                                                @csrf
-                                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                                <input type="hidden" name="quantity" value="1">
-                                                <button type="submit"
-                                                    class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-orange-500 transition-all shadow-lg hover:shadow-orange-100"
-                                                    title="Thêm vào giỏ hàng">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                                                        viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M12 4v16m8-8H4" />
-                                                    </svg>
-                                                </button>
-                                            </form>
+                                        @if ($product->sale_price)
+                                            <div>
+                                                <span class="text-sm text-slate-500 line-through">
+                                                    {{ number_format($product->price, 0, ',', '.') }}đ
+                                                </span>
+                                                <span class="text-lg font-black text-orange-500">
+                                                    {{ number_format($product->sale_price, 0, ',', '.') }}đ
+                                                </span>
+                                            </div>
                                         @else
-                                            <a href="{{ route('login') }}"
-                                                class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-orange-500 transition-all shadow-lg hover:shadow-orange-100"
-                                                title="Đăng nhập để mua hàng">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                                                    viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                                </svg>
-                                            </a>
-                                        @endauth
+                                            <span class="text-lg font-black text-slate-900">
+                                                {{ number_format($product->price, 0, ',', '.') }}đ
+                                            </span>
+                                        @endif
+                                        <span
+                                            class="px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-semibold group-hover:bg-slate-900 transition">
+                                            Xem chi tiết
+                                        </span>
                                     </div>
-                                </div>
+                                </a>
                             @endforeach
                         </div>
                     @endif

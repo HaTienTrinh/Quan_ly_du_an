@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [HomeController::class, 'product'])->name('products');
+Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::get('/posts', [HomeController::class, 'post'])->name('posts');
 
