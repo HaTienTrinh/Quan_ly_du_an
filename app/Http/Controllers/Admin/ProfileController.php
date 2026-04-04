@@ -1,25 +1,19 @@
 <?php
 
-namespace App\Http\Controllers\Customer;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
-    public function index()
+    public function edit()
     {
-        $user = Auth::user()->load('defaultAddress', 'addresses');
+        $user = request()->user();
 
-        $primaryAddress = $user->defaultAddress ?? $user->addresses->sortByDesc('created_at')->first();
-
-        return view('customers.profile.index', [
-            'user' => $user,
-            'primaryAddress' => $primaryAddress,
-        ]);
+        return view('admin.profile.edit', compact('user'));
     }
 
     public function update(Request $request)
@@ -49,7 +43,7 @@ class ProfileController extends Controller
         $user->update($data);
 
         return redirect()
-            ->route('profile')
+            ->route('admin.profile.edit')
             ->with('success', 'Đã cập nhật thông tin cá nhân.');
     }
 }

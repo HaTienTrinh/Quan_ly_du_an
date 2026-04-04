@@ -232,6 +232,12 @@
         @endif
 
         <div class="admin-nav-label mt-3">Nội dung & người dùng</div>
+        @if(Route::has('admin.profile.edit'))
+            <a href="{{ route('admin.profile.edit') }}" class="admin-nav-link {{ request()->routeIs('admin.profile.*') ? 'active' : '' }}">
+                <i class="bi bi-person-badge"></i>
+                Thông tin cá nhân
+            </a>
+        @endif
         @if(Route::has('admin.posts.index'))
             <a href="{{ route('admin.posts.index') }}" class="admin-nav-link {{ request()->routeIs('admin.posts.*') ? 'active' : '' }}">
                 <i class="bi bi-newspaper"></i>
@@ -243,10 +249,10 @@
         @if(Route::has('admin.users.index'))
             <a href="{{ route('admin.users.index') }}" class="admin-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                 <i class="bi bi-people"></i>
-                Tài khoản
+                Tài khoản người dùng
             </a>
         @else
-            <span class="admin-nav-link disabled"><i class="bi bi-people"></i> Tài khoản</span>
+            <span class="admin-nav-link disabled"><i class="bi bi-people"></i> Tài khoản người dùng</span>
         @endif
     </nav>
     <div class="p-3 mt-auto border-top border-secondary border-opacity-25">

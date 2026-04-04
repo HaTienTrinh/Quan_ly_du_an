@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\HomeController;
@@ -55,7 +57,13 @@ Route::prefix('admin')
         Route::resource('products', ProductController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
         // Sprint 4 — Quản lý tài khoản
-        // Route::resource('users', Admin\UserController::class);
+        Route::get('users/trashed', [UserController::class, 'trashed'])->name('users.trashed');
+        Route::patch('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
+        Route::delete('users/{id}/force-delete', [UserController::class, 'forceDestroy'])->name('users.force-destroy');
+        Route::resource('users', UserController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
+
+        Route::get('profile', [AdminProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [AdminProfileController::class, 'update'])->name('profile.update');
 
         // Sprint 5 — Quản lý bài viết
         Route::get('posts/trashed', [PostController::class, 'trashed'])->name('posts.trashed');
@@ -90,7 +98,7 @@ Route::middleware(['auth', 'customer'])->group(function () {
 
     // Sprint 4 — Hồ sơ cá nhân
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    // Route::put('/profile', [Customer\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Sprint 5 — Đặt hàng
     Route::get('/checkout', [OrderController::class, 'checkout'])->name('checkout');
