@@ -26,11 +26,11 @@ class Post extends Model
     {
         return [
             'published_at' => 'datetime',
-            'deleted_at'   => 'datetime',
+            'deleted_at' => 'datetime',
         ];
     }
 
-    // ============ BOOT — tự tạo slug từ title ============
+    // ============ BOOT — slug từ title, tránh trùng (kể cả bản ghi đã xóa mềm) ============
 
     protected static function boot()
     {
@@ -38,15 +38,37 @@ class Post extends Model
 
         static::creating(function ($post) {
             if (empty($post->slug)) {
-                $post->slug = Str::slug($post->title);
+                $base = Str::slug($post->title) ?: 'bai-viet';
+                $post->slug = static::ensureUniqueSlug($base, null);
+            } else {
+                $base = Str::slug($post->slug) ?: 'bai-viet';
+                $post->slug = static::ensureUniqueSlug($base, null);
             }
         });
 
         static::updating(function ($post) {
-            if ($post->isDirty('title')) {
-                $post->slug = Str::slug($post->title);
+            if ($post->isDirty('title') && ! $post->isDirty('slug')) {
+                $base = Str::slug($post->title) ?: 'bai-viet';
+                $post->slug = static::ensureUniqueSlug($base, $post->id);
+            } elseif ($post->isDirty('slug')) {
+                $base = Str::slug($post->slug) ?: 'bai-viet';
+                $post->slug = static::ensureUniqueSlug($base, $post->id);
             }
         });
+    }
+
+    protected static function ensureUniqueSlug(string $base, ?int $exceptId): string
+    {
+        $slug = $base;
+        $n = 1;
+        while (static::withTrashed()
+            ->where('slug', $slug)
+            ->when($exceptId !== null, fn ($q) => $q->where('id', '!=', $exceptId))
+            ->exists()) {
+            $slug = $base.'-'.$n++;
+        }
+
+        return $slug;
     }
 
     // ============ HELPERS ============
@@ -54,6 +76,19 @@ class Post extends Model
     public function isPublished(): bool
     {
         return $this->status === 'published';
+    }
+
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if (empty($this->thumbnail)) {
+            return null;
+        }
+
+        if (Str::startsWith($this->thumbnail, ['http://', 'https://'])) {
+            return $this->thumbnail;
+        }
+
+        return asset('storage/'.$this->thumbnail);
     }
 
     // ============ SCOPES ============
