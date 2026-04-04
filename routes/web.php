@@ -2,10 +2,11 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Customer\HomeController;
 use App\Http\Controllers\Customer\CartController;
+use App\Http\Controllers\Customer\HomeController;
 use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -15,7 +16,6 @@ Route::get('/products', [HomeController::class, 'product'])->name('products');
 Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::get('/posts', [HomeController::class, 'post'])->name('posts');
-
 
 // Đăng ký / Đăng nhập / Đăng xuất
 Route::middleware('guest')->group(function () {
@@ -58,7 +58,10 @@ Route::prefix('admin')
         // Route::resource('users', Admin\UserController::class);
 
         // Sprint 5 — Quản lý bài viết
-        // Route::resource('posts', Admin\PostController::class);
+        Route::get('posts/trashed', [PostController::class, 'trashed'])->name('posts.trashed');
+        Route::patch('posts/{id}/restore', [PostController::class, 'restore'])->name('posts.restore');
+        Route::delete('posts/{id}/force-delete', [PostController::class, 'forceDestroy'])->name('posts.force-destroy');
+        Route::resource('posts', PostController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
         // Sprint 5 — Quản lý đơn hàng
         // Route::resource('orders', Admin\OrderController::class);
@@ -96,4 +99,3 @@ Route::middleware(['auth', 'customer'])->group(function () {
     Route::get('/orders/{order}/confirmation', [OrderController::class, 'confirmation'])->name('orders.confirmation');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
-    
