@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
@@ -22,7 +23,6 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::get('/posts', [HomeController::class, 'post'])->name('posts');
 Route::get('/posts/{slug}', [HomeController::class, 'postShow'])->name('posts.show');
 
-// Đăng ký / Đăng nhập / Đăng xuất
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
@@ -35,31 +35,22 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
-// ============================================================
-// ROUTE ADMIN (phải đăng nhập + role = admin)
-// ============================================================
-
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'admin'])
     ->group(function () {
-
-        // Dashboard
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-        // Sprint 2 — Quản lý danh mục
         Route::get('categories/trashed', [CategoryController::class, 'trashed'])->name('categories.trashed');
         Route::patch('categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
         Route::delete('categories/{id}/force-delete', [CategoryController::class, 'forceDestroy'])->name('categories.force-destroy');
         Route::resource('categories', CategoryController::class);
 
-        // Sprint 3 — Quản lý sản phẩm
         Route::get('products/trashed', [ProductController::class, 'trashed'])->name('products.trashed');
         Route::patch('products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
         Route::delete('products/{id}/force-delete', [ProductController::class, 'forceDestroy'])->name('products.force-destroy');
         Route::resource('products', ProductController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
-        // Sprint 4 — Quản lý tài khoản
         Route::get('users/trashed', [UserController::class, 'trashed'])->name('users.trashed');
         Route::patch('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
         Route::delete('users/{id}/force-delete', [UserController::class, 'forceDestroy'])->name('users.force-destroy');
@@ -68,27 +59,15 @@ Route::prefix('admin')
         Route::get('profile', [AdminProfileController::class, 'edit'])->name('profile.edit');
         Route::put('profile', [AdminProfileController::class, 'update'])->name('profile.update');
 
-        // Sprint 5 — Quản lý bài viết
         Route::get('posts/trashed', [PostController::class, 'trashed'])->name('posts.trashed');
         Route::patch('posts/{id}/restore', [PostController::class, 'restore'])->name('posts.restore');
         Route::delete('posts/{id}/force-delete', [PostController::class, 'forceDestroy'])->name('posts.force-destroy');
         Route::resource('posts', PostController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
-        // Sprint 5 — Quản lý đơn hàng
-        // Route::resource('orders', Admin\OrderController::class);
+        Route::resource('orders', AdminOrderController::class)->only(['index']);
     });
 
-// ============================================================
-// ROUTE KHÁCH HÀNG (phải đăng nhập + role = customer)
-// ============================================================
-
-// ============================================================
-// ROUTE GIỎ HÀNG + ĐẶT HÀNG (phải đăng nhập + role = customer)
-// ============================================================
-
 Route::middleware(['auth', 'customer'])->group(function () {
-
-    // Giỏ hàng
     Route::prefix('cart')
         ->name('cart.')
         ->group(function () {
@@ -99,7 +78,6 @@ Route::middleware(['auth', 'customer'])->group(function () {
             Route::post('/clear', [CartController::class, 'clear'])->name('clear');
         });
 
-    // Sprint 4 — Hồ sơ cá nhân
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/addresses', [ProfileController::class, 'storeAddress'])->name('profile.addresses.store');
@@ -107,7 +85,6 @@ Route::middleware(['auth', 'customer'])->group(function () {
     Route::patch('/profile/addresses/{address}/default', [ProfileController::class, 'setDefaultAddress'])->name('profile.addresses.default');
     Route::delete('/profile/addresses/{address}', [ProfileController::class, 'destroyAddress'])->name('profile.addresses.destroy');
 
-    // Sprint 5 — Đặt hàng
     Route::post('/products/{product}/reviews', [ProductReviewController::class, 'store'])->name('products.reviews.store');
     Route::post('/posts/{slug}/comments', [PostCommentController::class, 'store'])->name('posts.comments.store');
     Route::get('/checkout', [OrderController::class, 'checkout'])->name('checkout');
