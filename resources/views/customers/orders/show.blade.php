@@ -1,186 +1,283 @@
 @extends('customers.layouts.layout')
 
-@section('title', 'Chi Tiết Đơn Hàng - TTM SHOP')
+@section('title', 'Chi Tiết Đơn Hàng')
 
 @section('content')
-<div class="min-h-screen bg-white pt-12">
-    <div class="max-w-4xl mx-auto px-4 md:px-12 pb-12">
+    @php
+        $statusClasses = [
+            'pending' => 'bg-amber-100 text-amber-700',
+            'confirmed' => 'bg-blue-100 text-blue-700',
+            'processing' => 'bg-indigo-100 text-indigo-700',
+            'shipping' => 'bg-purple-100 text-purple-700',
+            'delivered' => 'bg-emerald-100 text-emerald-700',
+            'cancelled' => 'bg-red-100 text-red-700',
+            'returned' => 'bg-slate-200 text-slate-700',
+        ];
 
-        <!-- Header -->
-        <div class="mb-8">
-            <a href="{{ route('orders.index') }}"
-               class="text-orange-500 hover:text-orange-600 mb-4 inline-block">
-                ← Quay lại
-            </a>
+        $steps = [
+            'pending' => 'Chờ xác nhận',
+            'confirmed' => 'Đã xác nhận',
+            'processing' => 'Đang chuẩn bị hàng',
+            'shipping' => 'Đang giao hàng',
+            'delivered' => 'Đã giao thành công',
+        ];
 
-            <h1 class="text-3xl font-extrabold text-slate-900">
-                Đơn Hàng {{ $order->order_code }}
-            </h1>
-        </div>
+        $stepKeys = array_keys($steps);
+        $currentIndex = array_search($order->status, $stepKeys, true);
+        $currentIndex = $currentIndex === false ? -1 : $currentIndex;
+        $sortedHistories = $order->statusHistories->sortBy('created_at');
+        $reachedStatuses = $sortedHistories->pluck('to_status')->all();
+    @endphp
 
-        <div class="grid lg:grid-cols-3 gap-8">
+    <div class="min-h-screen bg-slate-50 pt-12">
+        <div class="mx-auto max-w-6xl px-4 pb-12 md:px-12">
+            <div class="mb-8">
+                <a href="{{ route('orders.index') }}" class="inline-block text-orange-500 transition hover:text-orange-600">
+                    ← Quay lại danh sách đơn hàng
+                </a>
+            </div>
 
-            <!-- LEFT -->
-            <div class="lg:col-span-2 space-y-6">
-
-                <!-- STATUS -->
-                <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6">
-                    <h2 class="text-xl font-bold mb-6 text-slate-900">
-                        Trạng thái đơn hàng
-                    </h2>
-
-                    @php
-                        $statuses = [
-                            'pending' => 'Chờ xác nhận',
-                            'confirmed' => 'Đã xác nhận',
-                            'shipping' => 'Đang giao',
-                            'delivered' => 'Hoàn thành'
-                        ];
-
-                        $currentIndex = array_search($order->status, array_keys($statuses));
-                    @endphp
-
-                    @foreach ($statuses as $key => $label)
-                        @php
-                            $index = array_search($key, array_keys($statuses));
-                            $active = $index <= $currentIndex;
-                        @endphp
-
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-8 h-8 flex items-center justify-center rounded-full
-                                {{ $active ? 'bg-green-500 text-white' : 'bg-slate-200 text-slate-500' }}">
-                                {{ $loop->iteration }}
-                            </div>
-
-                            <div>
-                                <p class="font-semibold text-slate-900">{{ $label }}</p>
-                                <p class="text-sm text-slate-500">
-                                    {{ $active ? 'Đã cập nhật' : 'Chờ xử lý' }}
-                                </p>
-                            </div>
-                        </div>
-                    @endforeach
+            @if (session('success'))
+                <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-700">
+                    {{ session('success') }}
                 </div>
+            @endif
 
-                <!-- SHIPPING -->
-                <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6">
-                    <h2 class="text-xl font-bold mb-6 text-slate-900">
-                        Thông tin giao hàng
-                    </h2>
+            @if (session('error'))
+                <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-700">
+                    {{ session('error') }}
+                </div>
+            @endif
 
-                    <div class="space-y-3 text-slate-700">
-                        <p><strong>Người nhận:</strong> {{ $order->receiver_name }}</p>
-                        <p><strong>SĐT:</strong> {{ $order->receiver_phone }}</p>
-                        <p>
-                            <strong>Địa chỉ:</strong><br>
-                            {{ $order->receiver_address_detail }},
-                            {{ $order->receiver_ward }},
-                            {{ $order->receiver_district }},
-                            {{ $order->receiver_province }}
+            <div class="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Đơn hàng</p>
+                        <h1 class="mt-2 text-3xl font-extrabold text-slate-900">{{ $order->order_code }}</h1>
+                        <p class="mt-3 text-slate-500">
+                            Đặt lúc {{ $order->created_at->format('d/m/Y H:i') }}
                         </p>
+                    </div>
 
-                        @if ($order->note)
-                            <p><strong>Ghi chú:</strong> {{ $order->note }}</p>
+                    <div class="flex flex-wrap gap-3">
+                        <span
+                            class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold {{ $statusClasses[$order->status] ?? 'bg-slate-100 text-slate-700' }}">
+                            {{ $order->status_label }}
+                        </span>
+
+                        @if ($order->canBeCancelled())
+                            <form action="{{ route('orders.cancel', $order) }}" method="POST"
+                                onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này không?');">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="cancel_reason" value="Khách hàng hủy đơn từ trang chi tiết đơn hàng.">
+                                <button type="submit"
+                                    class="rounded-xl border border-red-200 bg-red-50 px-4 py-2 font-semibold text-red-600 transition hover:bg-red-100">
+                                    Hủy đơn hàng
+                                </button>
+                            </form>
+                        @endif
+
+                        @if ($order->canBeReceived())
+                            <form action="{{ route('orders.receive', $order) }}" method="POST"
+                                onsubmit="return confirm('Xác nhận bạn đã nhận được đơn hàng này?');">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit"
+                                    class="rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-white transition hover:bg-emerald-600">
+                                    Xác nhận đã nhận hàng
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid gap-8 lg:grid-cols-3">
+                <div class="space-y-8 lg:col-span-2">
+                    <div id="tracking" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <div class="mb-6 flex items-center justify-between gap-4">
+                            <h2 class="text-xl font-bold text-slate-900">Theo dõi trạng thái</h2>
+                            <span
+                                class="inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $statusClasses[$order->status] ?? 'bg-slate-100 text-slate-700' }}">
+                                {{ $order->status_label }}
+                            </span>
+                        </div>
+
+                        <div class="space-y-5">
+                            @foreach ($steps as $key => $label)
+                                @php
+                                    $index = array_search($key, $stepKeys, true);
+                                    $isDone = in_array($key, $reachedStatuses, true) || $index <= $currentIndex;
+                                    $isCurrent = $order->status === $key;
+                                @endphp
+
+                                <div class="flex gap-4">
+                                    <div
+                                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold {{ $isDone ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500' }}">
+                                        {{ $loop->iteration }}
+                                    </div>
+
+                                    <div class="flex-1 border-b border-slate-100 pb-5 last:border-b-0 last:pb-0">
+                                        <div class="flex flex-wrap items-center gap-3">
+                                            <p class="font-semibold text-slate-900">{{ $label }}</p>
+                                            @if ($isCurrent)
+                                                <span class="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-600">
+                                                    Hiện tại
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ $isDone ? 'Đã cập nhật trạng thái này.' : 'Đang chờ bước tiếp theo.' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        @if ($order->status === 'cancelled')
+                            <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-700">
+                                <p class="font-semibold">Đơn hàng đã bị hủy</p>
+                                <p class="mt-1 text-sm">
+                                    Lý do: {{ $order->cancel_reason ?: 'Không có ghi chú.' }}
+                                </p>
+                                @if ($order->cancelled_at)
+                                    <p class="mt-1 text-sm">Thời gian: {{ $order->cancelled_at->format('d/m/Y H:i') }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h2 class="mb-6 text-xl font-bold text-slate-900">Chi tiết sản phẩm</h2>
+
+                        <div class="space-y-4">
+                            @foreach ($order->items as $item)
+                                <div class="flex gap-4 rounded-2xl bg-slate-50 p-4">
+                                    <div class="h-20 w-20 overflow-hidden rounded-2xl bg-slate-200">
+                                        @if ($item->product_thumbnail)
+                                            <img src="{{ asset('storage/' . $item->product_thumbnail) }}"
+                                                alt="{{ $item->product_name }}" class="h-full w-full object-cover">
+                                        @else
+                                            <div class="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-400">
+                                                No image
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <div class="flex-1">
+                                        <h3 class="font-semibold text-slate-900">{{ $item->product_name }}</h3>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ number_format($item->unit_price, 0, ',', '.') }} ₫ x {{ $item->quantity }}
+                                        </p>
+                                    </div>
+
+                                    <div class="text-right font-bold text-slate-900">
+                                        {{ number_format($item->subtotal, 0, ',', '.') }} ₫
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h2 class="mb-6 text-xl font-bold text-slate-900">Lịch sử cập nhật</h2>
+
+                        @if ($sortedHistories->isEmpty())
+                            <p class="text-slate-500">Chưa có lịch sử cập nhật cho đơn hàng này.</p>
+                        @else
+                            <div class="space-y-4">
+                                @foreach ($sortedHistories as $history)
+                                    <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                                        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                            <div>
+                                                <p class="font-semibold text-slate-900">
+                                                    {{ \App\Models\Order::STATUS_LABELS[$history->to_status] ?? $history->to_status }}
+                                                </p>
+                                                <p class="mt-1 text-sm text-slate-500">
+                                                    @if ($history->from_status)
+                                                        Từ
+                                                        {{ \App\Models\Order::STATUS_LABELS[$history->from_status] ?? $history->from_status }}
+                                                        sang
+                                                    @endif
+                                                    {{ \App\Models\Order::STATUS_LABELS[$history->to_status] ?? $history->to_status }}
+                                                </p>
+                                            </div>
+
+                                            <p class="text-sm text-slate-500">{{ $history->created_at->format('d/m/Y H:i') }}</p>
+                                        </div>
+
+                                        <p class="mt-3 text-sm text-slate-600">
+                                            {{ $history->note ?: 'Không có ghi chú thêm.' }}
+                                        </p>
+
+                                        <p class="mt-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
+                                            {{ $history->changedBy?->name ?? 'Hệ thống / Khách hàng' }}
+                                        </p>
+                                    </div>
+                                @endforeach
+                            </div>
                         @endif
                     </div>
                 </div>
 
-                <!-- ITEMS -->
-                <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6">
-                    <h2 class="text-xl font-bold mb-6 text-slate-900">
-                        Sản phẩm ({{ $order->items->count() }})
-                    </h2>
+                <div class="space-y-8">
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-24">
+                        <h2 class="mb-6 text-xl font-bold text-slate-900">Thông tin đơn hàng</h2>
 
-                    <div class="space-y-4">
-                        @foreach ($order->items as $item)
-                            <div class="flex gap-4 p-4 bg-slate-50 rounded-lg">
-
-                                <div class="w-20 h-20 rounded-lg overflow-hidden">
-                                    @if ($item->product_thumbnail)
-                                        <img src="{{ asset('storage/' . $item->product_thumbnail) }}"
-                                             class="w-full h-full object-cover">
-                                    @else
-                                        <div class="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400">
-                                            No img
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <div class="flex-1">
-                                    <h3 class="font-semibold text-slate-900">
-                                        {{ $item->product_name }}
-                                    </h3>
-
-                                    <p class="text-sm text-slate-500">
-                                        {{ number_format($item->unit_price, 0, ',', '.') }} ₫ x {{ $item->quantity }}
-                                    </p>
-                                </div>
-
-                                <div class="font-bold text-slate-900">
-                                    {{ number_format($item->subtotal, 0, ',', '.') }} ₫
-                                </div>
-
+                        <div class="space-y-3 text-slate-600">
+                            <div class="flex justify-between gap-4">
+                                <span>Tạm tính</span>
+                                <span>{{ number_format($order->subtotal, 0, ',', '.') }} ₫</span>
                             </div>
-                        @endforeach
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- RIGHT -->
-            <div>
-                <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 sticky top-24">
-
-                    <h2 class="text-xl font-bold mb-6 text-slate-900">
-                        Thanh toán
-                    </h2>
-
-                    <div class="space-y-2 text-slate-600 mb-4">
-                        <div class="flex justify-between">
-                            <span>Tạm tính</span>
-                            <span>{{ number_format($order->subtotal, 0, ',', '.') }} ₫</span>
+                            <div class="flex justify-between gap-4">
+                                <span>Phí vận chuyển</span>
+                                <span>{{ number_format($order->shipping_fee, 0, ',', '.') }} ₫</span>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <span>Giảm giá</span>
+                                <span>{{ number_format($order->discount_amount, 0, ',', '.') }} ₫</span>
+                            </div>
                         </div>
 
-                        <div class="flex justify-between">
-                            <span>Ship</span>
-                            <span>{{ number_format($order->shipping_fee, 0, ',', '.') }} ₫</span>
+                        <div class="mt-4 flex justify-between border-t border-slate-200 pt-4 text-lg font-bold text-slate-900">
+                            <span>Tổng thanh toán</span>
+                            <span class="text-orange-500">{{ number_format($order->total_amount, 0, ',', '.') }} ₫</span>
                         </div>
 
-                        <div class="flex justify-between">
-                            <span>Giảm giá</span>
-                            <span>{{ number_format($order->discount_amount, 0, ',', '.') }} ₫</span>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between text-lg font-bold border-t pt-4 text-slate-900">
-                        <span>Tổng</span>
-                        <span class="text-orange-500">
-                            {{ number_format($order->total_amount, 0, ',', '.') }} ₫
-                        </span>
-                    </div>
-
-                    <!-- Payment -->
-                    <div class="mt-6 text-slate-700 space-y-2">
-                        <p><strong>Phương thức:</strong> {{ $order->payment_method }}</p>
-
-                        <p>
-                            <strong>Trạng thái:</strong>
-                            @if ($order->payment_status === 'paid')
-                                <span class="text-green-600">Đã thanh toán</span>
-                            @else
-                                <span class="text-yellow-600">Chưa thanh toán</span>
+                        <div class="mt-6 space-y-3 border-t border-slate-200 pt-6 text-slate-700">
+                            <p><strong>Phương thức thanh toán:</strong> {{ $order->payment_label }}</p>
+                            <p>
+                                <strong>Thanh toán:</strong>
+                                @if ($order->payment_status === 'paid')
+                                    <span class="font-semibold text-emerald-600">Đã thanh toán</span>
+                                @elseif($order->payment_status === 'refunded')
+                                    <span class="font-semibold text-slate-600">Đã hoàn tiền</span>
+                                @else
+                                    <span class="font-semibold text-amber-600">Chưa thanh toán</span>
+                                @endif
+                            </p>
+                            @if ($order->paid_at)
+                                <p><strong>Thời gian thanh toán:</strong> {{ $order->paid_at->format('d/m/Y H:i') }}</p>
                             @endif
-                        </p>
-
-                        <p class="text-sm text-slate-500">
-                            Ngày: {{ $order->created_at->format('d/m/Y H:i') }}
-                        </p>
+                        </div>
                     </div>
 
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h2 class="mb-6 text-xl font-bold text-slate-900">Thông tin nhận hàng</h2>
+
+                        <div class="space-y-3 text-slate-700">
+                            <p><strong>Người nhận:</strong> {{ $order->receiver_name }}</p>
+                            <p><strong>Số điện thoại:</strong> {{ $order->receiver_phone }}</p>
+                            <p><strong>Địa chỉ:</strong> {{ $order->full_address }}</p>
+
+                            @if ($order->note)
+                                <p><strong>Ghi chú:</strong> {{ $order->note }}</p>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
-</div>
 @endsection

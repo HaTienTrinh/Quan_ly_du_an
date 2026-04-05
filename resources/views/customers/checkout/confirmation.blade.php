@@ -181,7 +181,7 @@
         <!-- Actions -->
         <div class="mt-8 flex gap-4 justify-center">
             <a href="{{ route('home') }}"
-                class="px-6 py-3 border border-slate-300 rounded-lg hover:border-orange-500">
+                class="px-6 py-3 border border-slate-300 rounded-lg text-black hover:border-orange-500">
                 ← Trang chủ
             </a>
 

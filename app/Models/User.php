@@ -95,4 +95,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(OrderStatusHistory::class, 'changed_by');
     }
+
+    public function productReviews()
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function postComments()
+    {
+        return $this->hasMany(PostComment::class);
+    }
 }
