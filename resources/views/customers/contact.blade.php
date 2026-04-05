@@ -8,7 +8,7 @@
     <!-- HEADER -->
     <section class="max-w-7xl mx-auto px-6 lg:px-12 pt-20 pb-16 text-center">
         <span class="text-orange-500 font-bold tracking-[0.3em] text-xs uppercase">
-            Luna Steps
+            Shop TTM
         </span>
         <h2 class="text-5xl font-extrabold mt-3 mb-4">
             Liên hệ với chúng tôi

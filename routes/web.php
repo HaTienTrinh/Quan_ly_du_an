@@ -10,6 +10,8 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\HomeController;
 use App\Http\Controllers\Customer\OrderController;
+use App\Http\Controllers\Customer\PostCommentController;
+use App\Http\Controllers\Customer\ProductReviewController;
 use App\Http\Controllers\Customer\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +20,7 @@ Route::get('/products', [HomeController::class, 'product'])->name('products');
 Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::get('/posts', [HomeController::class, 'post'])->name('posts');
+Route::get('/posts/{slug}', [HomeController::class, 'postShow'])->name('posts.show');
 
 // Đăng ký / Đăng nhập / Đăng xuất
 Route::middleware('guest')->group(function () {
@@ -99,11 +102,20 @@ Route::middleware(['auth', 'customer'])->group(function () {
     // Sprint 4 — Hồ sơ cá nhân
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/addresses', [ProfileController::class, 'storeAddress'])->name('profile.addresses.store');
+    Route::put('/profile/addresses/{address}', [ProfileController::class, 'updateAddress'])->name('profile.addresses.update');
+    Route::patch('/profile/addresses/{address}/default', [ProfileController::class, 'setDefaultAddress'])->name('profile.addresses.default');
+    Route::delete('/profile/addresses/{address}', [ProfileController::class, 'destroyAddress'])->name('profile.addresses.destroy');
 
     // Sprint 5 — Đặt hàng
+    Route::post('/products/{product}/reviews', [ProductReviewController::class, 'store'])->name('products.reviews.store');
+    Route::post('/posts/{slug}/comments', [PostCommentController::class, 'store'])->name('posts.comments.store');
     Route::get('/checkout', [OrderController::class, 'checkout'])->name('checkout');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}/confirmation', [OrderController::class, 'confirmation'])->name('orders.confirmation');
+    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::patch('/orders/{order}/receive', [OrderController::class, 'receive'])->name('orders.receive');
+    Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });

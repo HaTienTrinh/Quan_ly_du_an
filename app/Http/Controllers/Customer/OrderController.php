@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderStatusHistory;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,24 +17,28 @@ class OrderController extends Controller
     private const SHIPPING_FEE = 30000;
 
     /**
-     * Xem trang thanh toán
+     * Xem trang thanh toán.
      */
     public function checkout()
     {
-        $cart = Session::get('cart', []);
+        $cart = $this->getSelectedCart(request());
 
         if (empty($cart)) {
-            return redirect()->route('cart.index')->with('error', 'Giỏ hàng trống');
+            return redirect()->route('cart.index')->with('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
         }
 
         $total = collect($cart)->sum('subtotal');
         $shippingFee = self::SHIPPING_FEE;
         $totalAmount = $total + $shippingFee;
+        $selectedItemIds = array_keys($cart);
 
         $user = Auth::user();
+        $savedAddresses = $user->addresses()
+            ->orderByDesc('is_default')
+            ->latest()
+            ->get();
 
-        // Lấy địa chỉ gần nhất của người dùng nếu có
-        $latestAddress = $user->addresses()->latest()->first();
+        $selectedAddress = $savedAddresses->firstWhere('is_default', true) ?? $savedAddresses->first();
 
         return view('customers.checkout.checkout', [
             'cart' => $cart,
@@ -40,16 +46,20 @@ class OrderController extends Controller
             'shippingFee' => $shippingFee,
             'totalAmount' => $totalAmount,
             'user' => $user,
-            'latestAddress' => $latestAddress,
+            'savedAddresses' => $savedAddresses,
+            'selectedAddress' => $selectedAddress,
+            'selectedItemIds' => $selectedItemIds,
         ]);
     }
 
     /**
-     * Lưu đơn hàng
+     * Lưu đơn hàng.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'selected_items' => 'required|array|min:1',
+            'selected_items.*' => 'integer',
             'receiver_name' => 'required|string|max:255',
             'receiver_phone' => 'required|string|max:20',
             'receiver_province' => 'required|string|max:255',
@@ -60,28 +70,21 @@ class OrderController extends Controller
             'note' => 'nullable|string',
         ]);
 
-        $cart = Session::get('cart', []);
+        $cart = $this->getSelectedCart($request);
 
         if (empty($cart)) {
-            return back()->with('error', 'Giỏ hàng trống');
+            return back()->with('error', 'Không tìm thấy sản phẩm đã chọn trong giỏ hàng.');
         }
 
         try {
             DB::beginTransaction();
 
             $subtotal = collect($cart)->sum('subtotal');
-
-            // Tính phí vận chuyển (có thể tùy chỉnh)
-            $shippingFee = self::SHIPPING_FEE; // 30,000 VND
-
+            $shippingFee = self::SHIPPING_FEE;
             $totalAmount = $subtotal + $shippingFee;
 
-            // Tạo mã đơn hàng
-            $orderCode = 'ORD-' . date('YmdHis') . '-' . Auth::id();
-
-            // Tạo đơn hàng
             $order = Order::create([
-                'order_code' => $orderCode,
+                'order_code' => 'ORD-' . date('YmdHis') . '-' . Auth::id(),
                 'user_id' => Auth::id(),
                 'receiver_name' => $validated['receiver_name'],
                 'receiver_phone' => $validated['receiver_phone'],
@@ -93,13 +96,12 @@ class OrderController extends Controller
                 'shipping_fee' => $shippingFee,
                 'discount_amount' => 0,
                 'total_amount' => $totalAmount,
-                'status' => 'pending',
+                'status' => Order::STATUS_PENDING,
                 'payment_method' => $validated['payment_method'],
                 'payment_status' => 'unpaid',
                 'note' => $validated['note'] ?? null,
             ]);
 
-            // Tạo các mục trong đơn hàng
             foreach ($cart as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -112,31 +114,39 @@ class OrderController extends Controller
                 ]);
             }
 
+            $this->recordStatusHistory(
+                order: $order,
+                fromStatus: null,
+                toStatus: Order::STATUS_PENDING,
+                note: 'Đơn hàng được tạo bởi khách hàng.'
+            );
+
             DB::commit();
+            $remainingCart = Session::get('cart', []);
 
-            // Xóa giỏ hàng
-            Session::forget('cart');
+            foreach (array_keys($cart) as $productId) {
+                unset($remainingCart[$productId]);
+            }
 
-            // Chuyển sang trang trạng thái đơn hàng sau khi đặt thành công
-            return redirect()->route('orders.confirmation', $order->id)
-                ->with('success', 'Đặt hàng thành công! Đang chuyển sang trang trạng thái đơn.');
-        } catch (\Exception $e) {
+            Session::put('cart', $remainingCart);
+
+            return redirect()
+                ->route('orders.confirmation', $order)
+                ->with('success', 'Đặt hàng thành công. Bạn có thể theo dõi trạng thái đơn hàng ngay tại đây.');
+        } catch (\Throwable $e) {
             DB::rollBack();
+
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 
     /**
-     * Xác nhận đơn hàng
+     * Xác nhận đơn hàng sau khi đặt thành công.
      */
-    public function confirmation($orderId)
+    public function confirmation(Order $order)
     {
-        $order = Order::with('items')->findOrFail($orderId);
-
-        // Kiểm tra quyền sở hữu
-        if ($order->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorizeOwnedOrder($order);
+        $order->loadMissing('items');
 
         return view('customers.checkout.confirmation', [
             'order' => $order,
@@ -144,31 +154,292 @@ class OrderController extends Controller
     }
 
     /**
-     * Xem danh sách đơn hàng
+     * Xem danh sách đơn hàng.
      */
     public function index()
     {
-        $orders = Auth::user()->orders()->orderByDesc('created_at')->paginate(10);
+        $allowedStatuses = [
+            'all',
+            Order::STATUS_PENDING,
+            Order::STATUS_CONFIRMED,
+            Order::STATUS_PROCESSING,
+            Order::STATUS_SHIPPING,
+            Order::STATUS_DELIVERED,
+            Order::STATUS_RETURNED,
+            Order::STATUS_CANCELLED,
+        ];
+
+        $selectedStatus = request()->string('status')->toString() ?: 'all';
+
+        if (! in_array($selectedStatus, $allowedStatuses, true)) {
+            $selectedStatus = 'all';
+        }
+
+        $baseQuery = Auth::user()->orders();
+
+        $statusCounts = (clone $baseQuery)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $ordersQuery = (clone $baseQuery)->withCount('items');
+
+        if ($selectedStatus !== 'all') {
+            $ordersQuery->where('status', $selectedStatus);
+        }
+
+        $orders = $ordersQuery
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $tabs = [
+            'all' => [
+                'label' => 'Tất cả',
+                'count' => (clone $baseQuery)->count(),
+            ],
+            Order::STATUS_PENDING => [
+                'label' => 'Chờ xác nhận',
+                'count' => (int) ($statusCounts[Order::STATUS_PENDING] ?? 0),
+            ],
+            Order::STATUS_CONFIRMED => [
+                'label' => 'Đã xác nhận',
+                'count' => (int) ($statusCounts[Order::STATUS_CONFIRMED] ?? 0),
+            ],
+            Order::STATUS_PROCESSING => [
+                'label' => 'Đang chuẩn bị hàng',
+                'count' => (int) ($statusCounts[Order::STATUS_PROCESSING] ?? 0),
+            ],
+            Order::STATUS_SHIPPING => [
+                'label' => 'Đang giao hàng',
+                'count' => (int) ($statusCounts[Order::STATUS_SHIPPING] ?? 0),
+            ],
+            Order::STATUS_DELIVERED => [
+                'label' => 'Đã giao thành công',
+                'count' => (int) ($statusCounts[Order::STATUS_DELIVERED] ?? 0),
+            ],
+            Order::STATUS_RETURNED => [
+                'label' => 'Trả hàng',
+                'count' => (int) ($statusCounts[Order::STATUS_RETURNED] ?? 0),
+            ],
+            Order::STATUS_CANCELLED => [
+                'label' => 'Đã hủy',
+                'count' => (int) ($statusCounts[Order::STATUS_CANCELLED] ?? 0),
+            ],
+        ];
 
         return view('customers.orders.index', [
             'orders' => $orders,
+            'tabs' => $tabs,
+            'selectedStatus' => $selectedStatus,
         ]);
     }
 
     /**
-     * Xem chi tiết đơn hàng
+     * Xem chi tiết đơn hàng.
      */
-    public function show($orderId)
+    public function show(Order $order)
     {
-        $order = Order::with('items')->findOrFail($orderId);
-
-        // Kiểm tra quyền sở hữu
-        if ($order->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorizeOwnedOrder($order);
+        $order->loadMissing(['items', 'statusHistories.changedBy']);
 
         return view('customers.orders.show', [
             'order' => $order,
         ]);
+    }
+
+    /**
+     * Hủy đơn hàng.
+     */
+    public function cancel(Request $request, Order $order)
+    {
+        $this->authorizeOwnedOrder($order);
+
+        if (! $order->canBeCancelled()) {
+            return back()->with('error', 'Đơn hàng này không thể hủy ở thời điểm hiện tại.');
+        }
+
+        $validated = $request->validate([
+            'cancel_reason' => 'nullable|string|max:255',
+        ]);
+
+        $fromStatus = $order->status;
+        $reason = $validated['cancel_reason'] ?: 'Khách hàng chủ động hủy đơn.';
+
+        DB::transaction(function () use ($order, $fromStatus, $reason) {
+            $order->update([
+                'status' => Order::STATUS_CANCELLED,
+                'cancelled_at' => now(),
+                'cancel_reason' => $reason,
+            ]);
+
+            $this->recordStatusHistory(
+                order: $order,
+                fromStatus: $fromStatus,
+                toStatus: Order::STATUS_CANCELLED,
+                note: $reason
+            );
+        });
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('success', 'Đơn hàng đã được hủy thành công.');
+    }
+
+    /**
+     * Khách hàng xác nhận đã nhận hàng.
+     */
+    public function receive(Order $order)
+    {
+        $this->authorizeOwnedOrder($order);
+
+        if (! $order->canBeReceived()) {
+            return back()->with('error', 'Đơn hàng này chưa thể xác nhận đã nhận.');
+        }
+
+        $fromStatus = $order->status;
+
+        DB::transaction(function () use ($order, $fromStatus) {
+            $attributes = [
+                'status' => Order::STATUS_DELIVERED,
+            ];
+
+            if (
+                $order->payment_status === 'unpaid'
+                && $order->getRawOriginal('payment_method') === 'cod'
+            ) {
+                $attributes['payment_status'] = 'paid';
+                $attributes['paid_at'] = now();
+            }
+
+            $order->update($attributes);
+
+            $this->recordStatusHistory(
+                order: $order,
+                fromStatus: $fromStatus,
+                toStatus: Order::STATUS_DELIVERED,
+                note: 'Khách hàng đã xác nhận nhận hàng thành công.'
+            );
+        });
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('success', 'Cảm ơn bạn đã xác nhận nhận hàng.');
+    }
+
+    /**
+     * Mua lại sản phẩm từ đơn hàng cũ.
+     */
+    public function reorder(Order $order)
+    {
+        $this->authorizeOwnedOrder($order);
+
+        if ($order->status !== Order::STATUS_CANCELLED) {
+            return back()->with('error', 'Chỉ có thể mua lại từ các đơn hàng đã hủy.');
+        }
+
+        $order->loadMissing('items');
+
+        $productIds = $order->items
+            ->pluck('product_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $products = Product::query()
+            ->whereIn('id', $productIds)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('id');
+
+        $cart = Session::get('cart', []);
+        $addedCount = 0;
+        $skippedProducts = [];
+
+        foreach ($order->items as $item) {
+            $product = $products->get($item->product_id);
+
+            if (! $product || ! $product->isInStock()) {
+                $skippedProducts[] = $item->product_name;
+                continue;
+            }
+
+            $quantity = min($item->quantity, $product->stock);
+
+            if ($quantity <= 0) {
+                $skippedProducts[] = $item->product_name;
+                continue;
+            }
+
+            if (isset($cart[$product->id])) {
+                $cart[$product->id]['quantity'] += $quantity;
+            } else {
+                $cart[$product->id] = [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'product_thumbnail' => $product->thumbnail,
+                    'unit_price' => $product->price,
+                    'quantity' => $quantity,
+                ];
+            }
+
+            $cart[$product->id]['subtotal'] = $cart[$product->id]['unit_price'] * $cart[$product->id]['quantity'];
+            $addedCount++;
+        }
+
+        Session::put('cart', $cart);
+
+        if ($addedCount === 0) {
+            return back()->with('error', 'Không thể mua lại vì các sản phẩm trong đơn hiện không còn khả dụng.');
+        }
+
+        $message = 'Đã thêm sản phẩm từ đơn hàng cũ vào giỏ hàng.';
+
+        if ($skippedProducts !== []) {
+            $message .= ' Một số sản phẩm không còn khả dụng: ' . implode(', ', array_unique($skippedProducts)) . '.';
+        }
+
+        return redirect()->route('cart.index')->with('success', $message);
+    }
+
+    private function authorizeOwnedOrder(Order $order): void
+    {
+        if ((int) $order->user_id !== (int) Auth::id()) {
+            abort(403, 'Unauthorized');
+        }
+    }
+
+    private function recordStatusHistory(
+        Order $order,
+        ?string $fromStatus,
+        string $toStatus,
+        ?string $note = null
+    ): void {
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'changed_by' => Auth::id(),
+            'from_status' => $fromStatus,
+            'to_status' => $toStatus,
+            'note' => $note,
+        ]);
+    }
+
+    private function getSelectedCart(Request $request): array
+    {
+        $cart = Session::get('cart', []);
+        $selectedItems = collect($request->input('selected_items', []))
+            ->map(fn ($id) => (string) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($selectedItems === []) {
+            return [];
+        }
+
+        return collect($cart)
+            ->filter(fn ($item, $productId) => in_array((string) $productId, $selectedItems, true))
+            ->all();
     }
 }

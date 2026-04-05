@@ -1,6 +1,6 @@
 @extends('customers.layouts.layout')
 
-@section('title', 'Trang chủ - Shop TTM')
+@section('title', 'Trang chủ')
 
 @section('content')
     <style>

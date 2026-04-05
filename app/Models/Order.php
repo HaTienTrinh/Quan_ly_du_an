@@ -129,7 +129,16 @@ class Order extends Model
 
     public function canBeCancelled(): bool
     {
-        return in_array($this->status, ['pending', 'confirmed']);
+        return in_array($this->status, [
+            self::STATUS_PENDING,
+            self::STATUS_CONFIRMED,
+            self::STATUS_PROCESSING,
+        ], true);
+    }
+
+    public function canBeReceived(): bool
+    {
+        return $this->status === self::STATUS_SHIPPING;
     }
 
     // ============ SCOPES ============

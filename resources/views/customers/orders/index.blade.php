@@ -1,121 +1,190 @@
 @extends('customers.layouts.layout')
 
-@section('title', 'Đơn Hàng Của Tôi - TTM SHOP')
+@section('title', 'Đơn Hàng Của Tôi')
 
 @section('content')
-<div class="min-h-screen bg-white pt-12">
-    <div class="max-w-7xl mx-auto px-4 md:px-12 pb-12">
+    @php
+        $statusClasses = [
+            'pending' => 'bg-amber-100 text-amber-700',
+            'confirmed' => 'bg-blue-100 text-blue-700',
+            'processing' => 'bg-indigo-100 text-indigo-700',
+            'shipping' => 'bg-purple-100 text-purple-700',
+            'delivered' => 'bg-emerald-100 text-emerald-700',
+            'cancelled' => 'bg-red-100 text-red-700',
+            'returned' => 'bg-slate-200 text-slate-700',
+        ];
 
-        <!-- Header -->
-        <div class="mb-12">
-            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-slate-900">
-                Đơn Hàng Của Tôi
-            </h1>
-            <p class="text-slate-500 text-lg">
-                Theo dõi trạng thái các đơn hàng của bạn
-            </p>
-        </div>
+        $emptyMessages = [
+            'all' => 'Bạn chưa có đơn hàng nào.',
+            'pending' => 'Không có đơn hàng nào đang chờ xác nhận.',
+            'confirmed' => 'Không có đơn hàng nào đã được xác nhận.',
+            'processing' => 'Không có đơn hàng nào đang chuẩn bị hàng.',
+            'shipping' => 'Không có đơn hàng nào đang giao hàng.',
+            'delivered' => 'Không có đơn hàng nào đã giao thành công.',
+            'returned' => 'Chưa có đơn hàng trả hàng nào. Trả hàng chỉ áp dụng sau khi đơn đã hoàn thành.',
+            'cancelled' => 'Không có đơn hàng nào đã hủy.',
+        ];
+    @endphp
 
-        @if ($orders->isEmpty())
-            <!-- Empty -->
-            <div class="text-center py-24">
-                <h2 class="text-2xl font-bold mb-2 text-slate-900">
-                    Bạn chưa có đơn hàng nào
-                </h2>
-                <p class="text-slate-500 mb-8">
-                    Hãy bắt đầu mua sắm ngay
-                </p>
+    <div class="min-h-screen bg-slate-50 pt-12">
+        <div class="mx-auto max-w-7xl px-4 pb-12 md:px-12">
+            <div class="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                    <p class="mb-3 inline-flex rounded-full bg-orange-100 px-4 py-1 text-sm font-semibold text-orange-600">
+                        Quản lý đơn hàng
+                    </p>
+                    <h1 class="text-4xl font-extrabold text-slate-900 md:text-5xl">Đơn hàng của tôi</h1>
+                    <p class="mt-3 text-lg text-slate-500">
+                        Đơn hàng được chia theo từng trạng thái để bạn theo dõi, xử lý và mua lại nhanh hơn.
+                    </p>
+                </div>
 
                 <a href="{{ route('products') }}"
-                   class="inline-block px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg">
-                    Mua sắm ngay
+                    class="inline-flex items-center justify-center rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600">
+                    Tiếp tục mua sắm
                 </a>
             </div>
-        @else
-            <!-- Orders -->
-            <div class="space-y-4 mb-12">
 
-                @foreach ($orders as $order)
-                    <a href="{{ route('orders.show', $order->id) }}"
-                       class="block bg-white border border-slate-200 shadow-sm rounded-2xl p-6 hover:shadow-md transition">
+            @if (session('success'))
+                <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-700">
+                    {{ session('success') }}
+                </div>
+            @endif
 
-                        <div class="grid md:grid-cols-4 gap-6 items-center">
+            @if (session('error'))
+                <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-700">
+                    {{ session('error') }}
+                </div>
+            @endif
 
-                            <!-- Code -->
-                            <div>
-                                <p class="text-slate-500 text-sm">Mã đơn</p>
-                                <p class="text-lg font-bold text-orange-500">
-                                    {{ $order->order_code }}
-                                </p>
+            <div class="mb-8 rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+                <div class="flex flex-wrap gap-3">
+                    @foreach ($tabs as $status => $tab)
+                        <a href="{{ $status === 'all' ? route('orders.index') : route('orders.index', ['status' => $status]) }}"
+                            class="inline-flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-orange-500 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                            <span>{{ $tab['label'] }}</span>
+                            <span
+                                class="inline-flex min-w-7 items-center justify-center rounded-full px-2 py-1 text-xs {{ $selectedStatus === $status ? 'bg-white/20 text-white' : 'bg-white text-slate-600' }}">
+                                {{ $tab['count'] }}
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+
+                @if ($selectedStatus === 'returned')
+                    <p class="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                        Trả hàng chỉ phát sinh sau khi đơn hàng đã được giao thành công và hoàn tất.
+                    </p>
+                @endif
+            </div>
+
+            @if ($orders->isEmpty())
+                <div class="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-20 text-center shadow-sm">
+                    <h2 class="text-2xl font-bold text-slate-900">{{ $tabs[$selectedStatus]['label'] }}</h2>
+                    <p class="mt-3 text-slate-500">{{ $emptyMessages[$selectedStatus] ?? 'Chưa có dữ liệu đơn hàng.' }}</p>
+                    <a href="{{ route('products') }}"
+                        class="mt-8 inline-flex rounded-xl bg-orange-500 px-8 py-3 font-semibold text-white transition hover:bg-orange-600">
+                        Mua sắm ngay
+                    </a>
+                </div>
+            @else
+                <div class="space-y-5">
+                    @foreach ($orders as $order)
+                        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                                <div class="grid flex-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                                    <div>
+                                        <p class="text-sm text-slate-500">Mã đơn hàng</p>
+                                        <p class="mt-1 text-lg font-bold text-orange-500">{{ $order->order_code }}</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-sm text-slate-500">Ngày đặt</p>
+                                        <p class="mt-1 font-semibold text-slate-900">{{ $order->created_at->format('d/m/Y H:i') }}</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-sm text-slate-500">Sản phẩm</p>
+                                        <p class="mt-1 font-semibold text-slate-900">{{ $order->items_count }} sản phẩm</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-sm text-slate-500">Tổng thanh toán</p>
+                                        <p class="mt-1 text-xl font-bold text-slate-900">
+                                            {{ number_format($order->total_amount, 0, ',', '.') }} ₫
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="lg:text-right">
+                                    <p class="text-sm text-slate-500">Trạng thái hiện tại</p>
+                                    <span
+                                        class="mt-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $statusClasses[$order->status] ?? 'bg-slate-100 text-slate-700' }}">
+                                        {{ $order->status_label }}
+                                    </span>
+                                </div>
                             </div>
 
-                            <!-- Date -->
-                            <div>
-                                <p class="text-slate-500 text-sm">Ngày đặt</p>
-                                <p class="font-semibold text-slate-900">
-                                    {{ $order->created_at->format('d/m/Y') }}
-                                </p>
-                            </div>
+                            <div class="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
+                                <a href="{{ route('orders.show', $order) }}"
+                                    class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2 font-semibold text-slate-700 transition hover:border-orange-500 hover:text-orange-500">
+                                    Xem chi tiết
+                                </a>
 
-                            <!-- Status -->
-                            <div>
-                                <p class="text-slate-500 text-sm mb-1">Trạng thái</p>
+                                <a href="{{ route('orders.show', $order) }}#tracking"
+                                    class="inline-flex items-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 font-semibold text-blue-700 transition hover:bg-blue-100">
+                                    Theo dõi trạng thái
+                                </a>
 
-                                @if ($order->status === 'pending')
-                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-full text-sm">
-                                        Chờ xác nhận
-                                    </span>
+                                @if ($order->canBeCancelled())
+                                    <form action="{{ route('orders.cancel', $order) }}" method="POST"
+                                        onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này không?');">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="cancel_reason" value="Khách hàng hủy đơn từ danh sách đơn hàng.">
+                                        <button type="submit"
+                                            class="inline-flex items-center rounded-xl border border-red-200 bg-red-50 px-4 py-2 font-semibold text-red-600 transition hover:bg-red-100">
+                                            Hủy đơn hàng
+                                        </button>
+                                    </form>
+                                @endif
 
-                                @elseif($order->status === 'confirmed')
-                                    <span class="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">
-                                        Đã xác nhận
-                                    </span>
+                                @if ($order->canBeReceived())
+                                    <form action="{{ route('orders.receive', $order) }}" method="POST"
+                                        onsubmit="return confirm('Xác nhận bạn đã nhận được đơn hàng này?');">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit"
+                                            class="inline-flex items-center rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-white transition hover:bg-emerald-600">
+                                            Xác nhận đã nhận hàng
+                                        </button>
+                                    </form>
+                                @endif
 
-                                @elseif($order->status === 'shipping')
-                                    <span class="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm">
-                                        Đang giao
-                                    </span>
-
-                                @elseif($order->status === 'delivered')
-                                    <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm">
-                                        Đã giao
-                                    </span>
-
-                                @elseif($order->status === 'cancelled')
-                                    <span class="px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm">
-                                        Đã hủy
-                                    </span>
+                                @if ($order->status === \App\Models\Order::STATUS_CANCELLED)
+                                    <form action="{{ route('orders.reorder', $order) }}" method="POST">
+                                        @csrf
+                                        <button type="submit"
+                                            class="inline-flex items-center rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-600 transition hover:bg-orange-100">
+                                            Mua lại
+                                        </button>
+                                    </form>
                                 @endif
                             </div>
-
-                            <!-- Total -->
-                            <div class="text-right">
-                                <p class="text-slate-500 text-sm">Tổng</p>
-                                <p class="text-xl font-bold text-orange-500">
-                                    {{ number_format($order->total_amount, 0, ',', '.') }} ₫
-                                </p>
-                            </div>
-
                         </div>
-                    </a>
-                @endforeach
+                    @endforeach
+                </div>
 
+                <div class="mt-10 flex justify-center">
+                    {{ $orders->links('pagination::simple-tailwind') }}
+                </div>
+            @endif
+
+            <div class="mt-8">
+                <a href="{{ route('home') }}" class="font-medium text-orange-500 transition hover:text-orange-600">
+                    ← Quay lại trang chủ
+                </a>
             </div>
-
-            <!-- Pagination -->
-            <div class="flex justify-center">
-                {{ $orders->links('pagination::simple-tailwind') }}
-            </div>
-        @endif
-
-        <!-- Back -->
-        <div class="mt-8">
-            <a href="{{ route('home') }}"
-               class="text-orange-500 hover:text-orange-600 font-medium">
-                ← Quay lại trang chủ
-            </a>
         </div>
-
     </div>
-</div>
 @endsection

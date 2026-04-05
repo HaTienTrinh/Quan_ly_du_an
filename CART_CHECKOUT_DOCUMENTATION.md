@@ -37,7 +37,7 @@ Hệ thống giỏ hàng và thanh toán đã được tạo hoàn chỉnh cho �
 
 - **Routes** (`routes/web.php`) - Thêm routes cho cart và order
 - **Layout** (`resources/views/customers/layouts/layout.blade.php`) - Cập nhật cart icon
-- **Products Listing** (`resources/views/customers/products.blade.php`) - Thêm "Add to Cart" button
+- **Products Listing** (`resources/views/customers/products/index.blade.php`) - Thêm "Add to Cart" button
 
 ## 🔗 Routes Added
 
