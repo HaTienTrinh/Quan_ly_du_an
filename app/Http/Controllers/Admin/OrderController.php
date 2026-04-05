@@ -144,6 +144,75 @@ class OrderController extends Controller
             ->with('success', 'Đã xác nhận đơn hàng thành công.');
     }
 
+    public function prepare(Order $order)
+    {
+        if (! $order->canBePrepared()) {
+            return back()->with('error', 'Chỉ có thể chuyển sang chuẩn bị khi đơn đã được xác nhận.');
+        }
+
+        $this->transitionOrderStatus(
+            order: $order,
+            toStatus: Order::STATUS_PROCESSING,
+            historyNote: 'Quản trị viên đã chuyển đơn hàng sang trạng thái đang chuẩn bị.',
+        );
+
+        return redirect()
+            ->route('admin.orders.show', $order)
+            ->with('success', 'Đơn hàng đã được chuyển sang trạng thái đang chuẩn bị.');
+    }
+
+    public function ship(Order $order)
+    {
+        if (! $order->canBeShipped()) {
+            return back()->with('error', 'Chỉ có thể chuyển sang giao hàng khi đơn đang ở bước chuẩn bị.');
+        }
+
+        $this->transitionOrderStatus(
+            order: $order,
+            toStatus: Order::STATUS_SHIPPING,
+            historyNote: 'Quản trị viên đã bàn giao đơn hàng cho đơn vị vận chuyển.',
+        );
+
+        return redirect()
+            ->route('admin.orders.show', $order)
+            ->with('success', 'Đơn hàng đã được chuyển sang trạng thái đang giao.');
+    }
+
+    public function complete(Order $order)
+    {
+        if (! $order->canBeCompleted()) {
+            return back()->with('error', 'Chỉ có thể xác nhận giao thành công khi đơn đang được giao.');
+        }
+
+        DB::transaction(function () use ($order) {
+            $fromStatus = $order->status;
+            $attributes = [
+                'status' => Order::STATUS_DELIVERED,
+            ];
+
+            if (
+                $order->payment_status === 'unpaid'
+                && $order->getRawOriginal('payment_method') === 'cod'
+            ) {
+                $attributes['payment_status'] = 'paid';
+                $attributes['paid_at'] = now();
+            }
+
+            $order->update($attributes);
+
+            $this->recordStatusHistory(
+                order: $order,
+                fromStatus: $fromStatus,
+                toStatus: Order::STATUS_DELIVERED,
+                note: 'Quản trị viên đã xác nhận giao hàng thành công.',
+            );
+        });
+
+        return redirect()
+            ->route('admin.orders.show', $order)
+            ->with('success', 'Đơn hàng đã được xác nhận giao thành công.');
+    }
+
     public function cancel(Request $request, Order $order)
     {
         if (! $order->canBeCancelled()) {
@@ -199,6 +268,27 @@ class OrderController extends Controller
             'items.product',
             'statusHistories.changedBy',
         ]);
+    }
+
+    private function transitionOrderStatus(
+        Order $order,
+        string $toStatus,
+        string $historyNote
+    ): void {
+        DB::transaction(function () use ($order, $toStatus, $historyNote) {
+            $fromStatus = $order->status;
+
+            $order->update([
+                'status' => $toStatus,
+            ]);
+
+            $this->recordStatusHistory(
+                order: $order,
+                fromStatus: $fromStatus,
+                toStatus: $toStatus,
+                note: $historyNote,
+            );
+        });
     }
 
     private function recordStatusHistory(

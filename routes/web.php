@@ -65,6 +65,9 @@ Route::prefix('admin')
         Route::resource('posts', PostController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
         Route::patch('orders/{order}/confirm', [AdminOrderController::class, 'confirm'])->name('orders.confirm');
+        Route::patch('orders/{order}/prepare', [AdminOrderController::class, 'prepare'])->name('orders.prepare');
+        Route::patch('orders/{order}/ship', [AdminOrderController::class, 'ship'])->name('orders.ship');
+        Route::patch('orders/{order}/complete', [AdminOrderController::class, 'complete'])->name('orders.complete');
         Route::patch('orders/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('orders.cancel');
         Route::resource('orders', AdminOrderController::class)->only(['index', 'show']);
     });

@@ -186,6 +186,51 @@
                     </form>
                 @endif
 
+                @if ($order->canBePrepared())
+                    <form
+                        action="{{ route('admin.orders.prepare', $order) }}"
+                        method="POST"
+                        class="mb-3"
+                        onsubmit="return confirm('Chuyển đơn hàng sang trạng thái đang chuẩn bị?');"
+                    >
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-box-seam me-1"></i> Chuyển sang đang chuẩn bị
+                        </button>
+                    </form>
+                @endif
+
+                @if ($order->canBeShipped())
+                    <form
+                        action="{{ route('admin.orders.ship', $order) }}"
+                        method="POST"
+                        class="mb-3"
+                        onsubmit="return confirm('Chuyển đơn hàng sang trạng thái đang giao?');"
+                    >
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-info text-white w-100">
+                            <i class="bi bi-truck me-1"></i> Chuyển sang đang giao
+                        </button>
+                    </form>
+                @endif
+
+                @if ($order->canBeCompleted())
+                    <form
+                        action="{{ route('admin.orders.complete', $order) }}"
+                        method="POST"
+                        class="mb-3"
+                        onsubmit="return confirm('Xác nhận đơn hàng đã giao thành công?');"
+                    >
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-patch-check me-1"></i> Xác nhận giao thành công
+                        </button>
+                    </form>
+                @endif
+
                 @if ($order->canBeCancelled())
                     <form
                         action="{{ route('admin.orders.cancel', $order) }}"
@@ -222,7 +267,13 @@
                     </form>
                 @endif
 
-                @if ($order->status !== \App\Models\Order::STATUS_PENDING && ! $order->canBeCancelled())
+                @if (
+                    $order->status !== \App\Models\Order::STATUS_PENDING
+                    && ! $order->canBePrepared()
+                    && ! $order->canBeShipped()
+                    && ! $order->canBeCompleted()
+                    && ! $order->canBeCancelled()
+                )
                     <div class="alert alert-light border mb-0">
                         Đơn hàng này hiện không còn thao tác xác nhận hoặc hủy trong màn hình này.
                     </div>

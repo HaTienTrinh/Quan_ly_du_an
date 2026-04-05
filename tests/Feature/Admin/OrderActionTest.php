@@ -111,4 +111,81 @@ class OrderActionTest extends TestCase
             'to_status' => Order::STATUS_CANCELLED,
         ]);
     }
+
+    public function test_admin_can_move_order_through_processing_shipping_and_delivered(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        $customer = User::factory()->create([
+            'role' => 'customer',
+        ]);
+
+        $order = Order::create([
+            'order_code' => 'ORD-FLOW-0001',
+            'user_id' => $customer->id,
+            'receiver_name' => 'Nguyễn Văn Flow',
+            'receiver_phone' => '0909000003',
+            'receiver_province' => 'Hồ Chí Minh',
+            'receiver_district' => 'Quận 7',
+            'receiver_ward' => 'Tân Phú',
+            'receiver_address_detail' => '3 Đường Test',
+            'subtotal' => 500000,
+            'shipping_fee' => 30000,
+            'discount_amount' => 0,
+            'total_amount' => 530000,
+            'status' => Order::STATUS_CONFIRMED,
+            'payment_method' => 'cod',
+            'payment_status' => 'unpaid',
+            'confirmed_by' => $admin->id,
+            'confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->patch(route('admin.orders.prepare', $order))
+            ->assertRedirect(route('admin.orders.show', $order));
+
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'status' => Order::STATUS_PROCESSING,
+        ]);
+
+        $this->actingAs($admin)->patch(route('admin.orders.ship', $order))
+            ->assertRedirect(route('admin.orders.show', $order));
+
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'status' => Order::STATUS_SHIPPING,
+        ]);
+
+        $this->actingAs($admin)->patch(route('admin.orders.complete', $order))
+            ->assertRedirect(route('admin.orders.show', $order));
+
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'status' => Order::STATUS_DELIVERED,
+            'payment_status' => 'paid',
+        ]);
+
+        $this->assertDatabaseHas('order_status_histories', [
+            'order_id' => $order->id,
+            'changed_by' => $admin->id,
+            'from_status' => Order::STATUS_CONFIRMED,
+            'to_status' => Order::STATUS_PROCESSING,
+        ]);
+
+        $this->assertDatabaseHas('order_status_histories', [
+            'order_id' => $order->id,
+            'changed_by' => $admin->id,
+            'from_status' => Order::STATUS_PROCESSING,
+            'to_status' => Order::STATUS_SHIPPING,
+        ]);
+
+        $this->assertDatabaseHas('order_status_histories', [
+            'order_id' => $order->id,
+            'changed_by' => $admin->id,
+            'from_status' => Order::STATUS_SHIPPING,
+            'to_status' => Order::STATUS_DELIVERED,
+        ]);
+    }
 }

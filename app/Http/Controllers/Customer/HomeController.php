@@ -22,7 +22,25 @@ class HomeController extends Controller
             ->limit(6)
             ->get();
 
-        return view('customers.home', compact('products'));
+        $reviews = ProductReview::query()
+            ->with([
+                'user:id,name,avatar',
+                'product:id,name',
+            ])
+            ->whereNotNull('comment')
+            ->where('comment', '!=', '')
+            ->whereHas('user', function ($query) {
+                $query->where('role', 'customer')
+                    ->where('is_active', true);
+            })
+            ->whereHas('product', function ($query) {
+                $query->active();
+            })
+            ->latest()
+            ->take(8)
+            ->get();
+
+        return view('customers.home', compact('products', 'reviews'));
     }
 
     public function product(Request $request)

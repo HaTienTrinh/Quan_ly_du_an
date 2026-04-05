@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Post;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -51,7 +52,22 @@ class DatabaseSeeder extends Seeder
         }
 
         Product::factory()->count(20)->create();
-        $products = Product::query()->take(6)->get();
+
+        $featuredProductIds = Product::query()
+            ->orderBy('id')
+            ->take(6)
+            ->pluck('id');
+
+        Product::query()
+            ->whereKey($featuredProductIds)
+            ->update([
+                'is_active' => true,
+                'stock' => 30,
+            ]);
+
+        $products = Product::query()
+            ->whereKey($featuredProductIds)
+            ->get();
 
         Post::factory()->count(10)->published()->create([
             'author_id' => $admin->id,
@@ -184,6 +200,67 @@ class DatabaseSeeder extends Seeder
                 'note' => 'Khởi tạo dữ liệu đơn hàng mẫu.',
                 'created_at' => $sampleOrder['created_at'],
                 'updated_at' => $sampleOrder['created_at'],
+            ]);
+        }
+
+        $reviewCustomers = collect([
+            $customer,
+            User::create([
+                'name' => 'Minh Anh',
+                'email' => 'minhanh@example.com',
+                'password' => Hash::make('password'),
+                'role' => 'customer',
+                'phone' => '0945678901',
+                'is_active' => true,
+            ]),
+            User::create([
+                'name' => 'Hai Nam',
+                'email' => 'hainam@example.com',
+                'password' => Hash::make('password'),
+                'role' => 'customer',
+                'phone' => '0956789012',
+                'is_active' => true,
+            ]),
+            User::create([
+                'name' => 'Linh Chi',
+                'email' => 'linhchi@example.com',
+                'password' => Hash::make('password'),
+                'role' => 'customer',
+                'phone' => '0967890123',
+                'is_active' => true,
+            ]),
+        ]);
+
+        $reviewProducts = Product::query()->take(4)->get();
+        $reviewSamples = [
+            [
+                'rating' => 5,
+                'comment' => 'Giày rất êm, đi cả ngày vẫn thoải mái và phối đồ rất đẹp.',
+            ],
+            [
+                'rating' => 5,
+                'comment' => 'Shop giao nhanh, đóng gói chỉn chu và tư vấn size khá chuẩn.',
+            ],
+            [
+                'rating' => 4,
+                'comment' => 'Form giày đẹp, chất liệu ổn, mang lên chân nhìn gọn và chắc.',
+            ],
+            [
+                'rating' => 5,
+                'comment' => 'Màu thực tế đẹp hơn ảnh, mang đi làm hay đi chơi đều hợp.',
+            ],
+        ];
+
+        foreach ($reviewSamples as $index => $reviewSample) {
+            $reviewedAt = now()->subDays(6 - $index);
+
+            ProductReview::create([
+                'user_id' => $reviewCustomers[$index]->id,
+                'product_id' => $reviewProducts[$index]->id,
+                'rating' => $reviewSample['rating'],
+                'comment' => $reviewSample['comment'],
+                'created_at' => $reviewedAt,
+                'updated_at' => $reviewedAt,
             ]);
         }
     }
