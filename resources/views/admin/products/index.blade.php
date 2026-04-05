@@ -64,16 +64,20 @@
                     @forelse($products as $product)
                         <tr>
                             <td class="ps-4">
-                                @if($product->thumbnail_url)
-                                    <img src="{{ $product->thumbnail_url }}" alt="{{ $product->name }}" class="rounded border" width="56" height="56" style="object-fit: cover;">
-                                @else
-                                    <div class="rounded bg-light border d-flex align-items-center justify-content-center text-muted" style="width:56px;height:56px;">
-                                        <i class="bi bi-box-seam" style="font-size: 1.25rem;"></i>
-                                    </div>
-                                @endif
+                                <a href="{{ route('admin.products.show', $product) }}" class="d-inline-block" title="Xem chi tiết {{ $product->name }}">
+                                    @if($product->thumbnail_url)
+                                        <img src="{{ $product->thumbnail_url }}" alt="{{ $product->name }}" class="rounded border" width="56" height="56" style="object-fit: cover;">
+                                    @else
+                                        <div class="rounded bg-light border d-flex align-items-center justify-content-center text-muted" style="width:56px;height:56px;">
+                                            <i class="bi bi-box-seam" style="font-size: 1.25rem;"></i>
+                                        </div>
+                                    @endif
+                                </a>
                             </td>
                             <td>
-                                <div class="fw-semibold">{{ $product->name }}</div>
+                                <a href="{{ route('admin.products.show', $product) }}" class="fw-semibold text-dark text-decoration-none">
+                                    {{ $product->name }}
+                                </a>
                                 <div class="small text-muted font-monospace">{{ $product->slug }}</div>
                             </td>
                             <td>{{ $product->category?->name ?? 'Chưa có' }}</td>
@@ -96,7 +100,7 @@
                             <td class="pe-4 text-end">
                                 <div class="d-inline-flex gap-1">
                                     <a href="{{ route('admin.products.show', $product) }}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
-                                        <i class="bi bi-eye"></i>
+                                        <i class="bi bi-eye me-1"></i> Xem
                                     </a>
                                     <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-secondary" title="Chỉnh sửa">
                                         <i class="bi bi-pencil"></i>

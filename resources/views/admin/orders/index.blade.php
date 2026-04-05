@@ -1,13 +1,13 @@
 @extends('layouts.admin')
 
-@section('title', 'Don hang')
+@section('title', 'Đơn hàng')
 
-@section('page_title', 'Xem danh sach va loc don hang')
+@section('page_title', 'Xem danh sách và lọc đơn hàng')
 
 @section('breadcrumb')
-    <span class="text-muted">Quan tri</span>
+    <span class="text-muted">Quản trị</span>
     <span class="text-muted">/</span>
-    <span>Don hang</span>
+    <span>Đơn hàng</span>
 @endsection
 
 @section('content')
@@ -49,24 +49,24 @@
                         name="q"
                         value="{{ request('q') }}"
                         class="form-control border-start-0"
-                        placeholder="Tim theo ma don, ten nguoi nhan, ten khach hang..."
-                        aria-label="Tim kiem don hang"
+                        placeholder="Tìm theo mã đơn, tên người nhận, tên khách hàng..."
+                        aria-label="Tìm kiếm đơn hàng"
                     >
                 </div>
             </div>
             <div class="col-12 col-md-4 col-lg-3">
-                <select name="status" class="form-select" aria-label="Loc trang thai">
+                <select name="status" class="form-select" aria-label="Lọc trạng thái">
                     @foreach ($statusOptions as $value => $label)
                         <option value="{{ $value }}" @selected((string) request('status') === (string) $value)>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="col-6 col-md-auto">
-                <button type="submit" class="btn btn-dark w-100">Loc don</button>
+                <button type="submit" class="btn btn-dark w-100">Lọc đơn</button>
             </div>
             @if (request()->hasAny(['q', 'status']) && (filled(request('q')) || filled(request('status'))))
                 <div class="col-6 col-md-auto">
-                    <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary w-100">Xoa bo loc</a>
+                    <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary w-100">Xóa bộ lọc</a>
                 </div>
             @endif
         </form>
@@ -77,26 +77,29 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">Ma don</th>
-                        <th>Khach hang</th>
-                        <th>Nguoi nhan</th>
-                        <th>Ngay dat</th>
-                        <th>So SP</th>
-                        <th>Tong tien</th>
-                        <th>Thanh toan</th>
-                        <th class="pe-4">Trang thai</th>
+                        <th class="ps-4">Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Người nhận</th>
+                        <th>Ngày đặt</th>
+                        <th>Số SP</th>
+                        <th>Tổng tiền</th>
+                        <th>Thanh toán</th>
+                        <th>Trạng thái</th>
+                        <th class="pe-4 text-end">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($orders as $order)
                         <tr>
                             <td class="ps-4">
-                                <div class="fw-semibold text-dark">{{ $order->order_code }}</div>
+                                <a href="{{ route('admin.orders.show', $order) }}" class="fw-semibold text-dark text-decoration-none">
+                                    {{ $order->order_code }}
+                                </a>
                                 <div class="small text-muted">#{{ $order->id }}</div>
                             </td>
                             <td>
-                                <div class="fw-semibold">{{ $order->user?->name ?? 'Khach vang lai' }}</div>
-                                <div class="small text-muted">{{ $order->user?->email ?? 'Khong co email' }}</div>
+                                <div class="fw-semibold">{{ $order->user?->name ?? 'Khách vãng lai' }}</div>
+                                <div class="small text-muted">{{ $order->user?->email ?? 'Không có email' }}</div>
                             </td>
                             <td>
                                 <div class="fw-semibold">{{ $order->receiver_name }}</div>
@@ -107,24 +110,29 @@
                                 <div class="small text-muted">{{ $order->created_at->format('H:i') }}</div>
                             </td>
                             <td>{{ number_format($order->items_count) }}</td>
-                            <td class="fw-semibold">{{ number_format($order->total_amount, 0, ',', '.') }}₫</td>
+                            <td class="fw-semibold">{{ number_format($order->total_amount, 0, ',', '.') }}&#8363;</td>
                             <td>
                                 <div>{{ $order->payment_label }}</div>
                                 <div class="small text-muted">
-                                    {{ $order->payment_status === 'paid' ? 'Da thanh toan' : ($order->payment_status === 'refunded' ? 'Da hoan tien' : 'Chua thanh toan') }}
+                                    {{ $order->payment_status === 'paid' ? 'Đã thanh toán' : ($order->payment_status === 'refunded' ? 'Đã hoàn tiền' : 'Chưa thanh toán') }}
                                 </div>
                             </td>
-                            <td class="pe-4">
+                            <td>
                                 <span class="badge rounded-pill {{ $statusClasses[$order->status] ?? 'bg-light text-dark border' }}">
                                     {{ $order->status_label }}
                                 </span>
                             </td>
+                            <td class="pe-4 text-end">
+                                <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i> Xem chi tiết
+                                </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox d-block mb-2" style="font-size: 2rem;"></i>
-                                Khong tim thay don hang phu hop voi bo loc hien tai.
+                                Không tìm thấy đơn hàng phù hợp với bộ lọc hiện tại.
                             </td>
                         </tr>
                     @endforelse
@@ -139,3 +147,4 @@
         @endif
     </div>
 @endsection
+

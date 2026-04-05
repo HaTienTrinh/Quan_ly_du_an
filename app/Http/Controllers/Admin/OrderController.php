@@ -11,14 +11,14 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $statusOptions = [
-            '' => 'Tat ca trang thai',
-            Order::STATUS_PENDING => 'Cho xac nhan',
-            Order::STATUS_CONFIRMED => 'Da xac nhan',
-            Order::STATUS_PROCESSING => 'Dang chuan bi',
-            Order::STATUS_SHIPPING => 'Dang giao',
-            Order::STATUS_DELIVERED => 'Hoan thanh',
-            Order::STATUS_CANCELLED => 'Da huy',
-            Order::STATUS_RETURNED => 'Hoan tra',
+            '' => 'Tất cả trạng thái',
+            Order::STATUS_PENDING => 'Chờ xác nhận',
+            Order::STATUS_CONFIRMED => 'Đã xác nhận',
+            Order::STATUS_PROCESSING => 'Đang chuẩn bị',
+            Order::STATUS_SHIPPING => 'Đang giao',
+            Order::STATUS_DELIVERED => 'Hoàn thành',
+            Order::STATUS_CANCELLED => 'Đã hủy',
+            Order::STATUS_RETURNED => 'Hoàn trả',
         ];
 
         $query = Order::query()
@@ -53,25 +53,25 @@ class OrderController extends Controller
 
         $summaryCards = [
             [
-                'label' => 'Tong don hang',
+                'label' => 'Tổng đơn hàng',
                 'value' => Order::count(),
                 'icon' => 'bi-receipt',
                 'class' => 'text-primary bg-primary-subtle',
             ],
             [
-                'label' => 'Cho xu ly',
+                'label' => 'Chờ xử lý',
                 'value' => (int) ($statusCounts[Order::STATUS_PENDING] ?? 0),
                 'icon' => 'bi-hourglass-split',
                 'class' => 'text-warning bg-warning-subtle',
             ],
             [
-                'label' => 'Dang giao',
+                'label' => 'Đang giao',
                 'value' => (int) ($statusCounts[Order::STATUS_SHIPPING] ?? 0),
                 'icon' => 'bi-truck',
                 'class' => 'text-info bg-info-subtle',
             ],
             [
-                'label' => 'Hoan thanh',
+                'label' => 'Hoàn thành',
                 'value' => (int) ($statusCounts[Order::STATUS_DELIVERED] ?? 0),
                 'icon' => 'bi-check2-circle',
                 'class' => 'text-success bg-success-subtle',
@@ -82,6 +82,20 @@ class OrderController extends Controller
             'orders' => $orders,
             'statusOptions' => $statusOptions,
             'summaryCards' => $summaryCards,
+        ]);
+    }
+
+    public function show(Order $order)
+    {
+        $order->load([
+            'user',
+            'confirmedBy',
+            'items.product',
+            'statusHistories.changedBy',
+        ]);
+
+        return view('admin.orders.show', [
+            'order' => $order,
         ]);
     }
 }

@@ -64,7 +64,7 @@ Route::prefix('admin')
         Route::delete('posts/{id}/force-delete', [PostController::class, 'forceDestroy'])->name('posts.force-destroy');
         Route::resource('posts', PostController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
-        Route::resource('orders', AdminOrderController::class)->only(['index']);
+        Route::resource('orders', AdminOrderController::class)->only(['index', 'show']);
     });
 
 Route::middleware(['auth', 'customer'])->group(function () {

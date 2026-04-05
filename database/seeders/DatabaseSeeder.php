@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $customer = User::create([
-            'name' => 'Nguyen Van A',
+            'name' => 'Nguyễn Văn A',
             'email' => 'customer@example.com',
             'password' => Hash::make('password'),
             'role' => 'customer',
@@ -35,11 +35,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $categories = [
-            'Running - Giay chay bo',
-            'Streetwear - Giay duong pho',
-            'Classic - Giay co dien',
-            'Basketball - Giay bong ro',
-            'Casual - Giay thoai mai',
+            'Running - Giày chạy bộ',
+            'Streetwear - Giày đường phố',
+            'Classic - Giày cổ điển',
+            'Basketball - Giày bóng rổ',
+            'Casual - Giày thoải mái',
         ];
 
         foreach ($categories as $name) {
@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
                 'status' => Order::STATUS_PENDING,
                 'payment_method' => 'cod',
                 'payment_status' => 'unpaid',
-                'receiver_name' => 'Nguyen Van A',
+                'receiver_name' => 'Nguyễn Văn A',
                 'receiver_phone' => '0901234567',
                 'created_at' => now()->subDays(4),
                 'items' => [
@@ -80,7 +80,7 @@ class DatabaseSeeder extends Seeder
                 'status' => Order::STATUS_CONFIRMED,
                 'payment_method' => 'bank_transfer',
                 'payment_status' => 'paid',
-                'receiver_name' => 'Tran Thi B',
+                'receiver_name' => 'Trần Thị B',
                 'receiver_phone' => '0912345678',
                 'created_at' => now()->subDays(3),
                 'items' => [
@@ -92,7 +92,7 @@ class DatabaseSeeder extends Seeder
                 'status' => Order::STATUS_SHIPPING,
                 'payment_method' => 'vnpay',
                 'payment_status' => 'paid',
-                'receiver_name' => 'Le Van C',
+                'receiver_name' => 'Lê Văn C',
                 'receiver_phone' => '0923456789',
                 'created_at' => now()->subDays(2),
                 'items' => [
@@ -105,7 +105,7 @@ class DatabaseSeeder extends Seeder
                 'status' => Order::STATUS_DELIVERED,
                 'payment_method' => 'momo',
                 'payment_status' => 'paid',
-                'receiver_name' => 'Pham Thi D',
+                'receiver_name' => 'Phạm Thị D',
                 'receiver_phone' => '0934567890',
                 'created_at' => now()->subDay(),
                 'items' => [
@@ -145,10 +145,10 @@ class DatabaseSeeder extends Seeder
                 'user_id' => $customer->id,
                 'receiver_name' => $sampleOrder['receiver_name'],
                 'receiver_phone' => $sampleOrder['receiver_phone'],
-                'receiver_province' => 'Ho Chi Minh',
-                'receiver_district' => 'Quan 1',
-                'receiver_ward' => 'Ben Nghe',
-                'receiver_address_detail' => '123 Duong Mau',
+                'receiver_province' => 'Hồ Chí Minh',
+                'receiver_district' => 'Quận 1',
+                'receiver_ward' => 'Bến Nghé',
+                'receiver_address_detail' => '123 Đường Mẫu',
                 'subtotal' => $subtotal,
                 'shipping_fee' => 30000,
                 'discount_amount' => 0,
@@ -157,7 +157,7 @@ class DatabaseSeeder extends Seeder
                 'payment_method' => $sampleOrder['payment_method'],
                 'payment_status' => $sampleOrder['payment_status'],
                 'paid_at' => $sampleOrder['payment_status'] === 'paid' ? $sampleOrder['created_at'] : null,
-                'note' => 'Don hang mau de kiem thu admin.',
+                'note' => 'Đơn hàng mẫu để kiểm thử admin.',
                 'confirmed_by' => $isConfirmed ? $admin->id : null,
                 'confirmed_at' => $isConfirmed ? $sampleOrder['created_at'] : null,
                 'created_at' => $sampleOrder['created_at'],
@@ -181,7 +181,7 @@ class DatabaseSeeder extends Seeder
                 'changed_by' => $sampleOrder['status'] === Order::STATUS_PENDING ? $customer->id : $admin->id,
                 'from_status' => null,
                 'to_status' => $sampleOrder['status'],
-                'note' => 'Khoi tao du lieu don hang mau.',
+                'note' => 'Khởi tạo dữ liệu đơn hàng mẫu.',
                 'created_at' => $sampleOrder['created_at'],
                 'updated_at' => $sampleOrder['created_at'],
             ]);
