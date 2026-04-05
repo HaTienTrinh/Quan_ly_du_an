@@ -56,6 +56,17 @@
         </div>
     </div>
 
+    @if ($errors->any())
+        <div class="alert alert-danger rounded-3">
+            <div class="fw-semibold mb-2">Có lỗi xảy ra:</div>
+            <ul class="mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="row g-4">
         <div class="col-xl-8">
             <div class="stat-card p-4 mb-4">
@@ -152,6 +163,71 @@
         </div>
 
         <div class="col-xl-4">
+            <div class="stat-card p-4 mb-4">
+                <h3 class="h5 fw-bold mb-3">Xử lý đơn hàng</h3>
+
+                @if ($order->status === \App\Models\Order::STATUS_PENDING)
+                    <form action="{{ route('admin.orders.confirm', $order) }}" method="POST" class="mb-3">
+                        @csrf
+                        @method('PATCH')
+                        <div class="mb-3">
+                            <label for="confirm_admin_note" class="form-label">Ghi chú nội bộ khi xác nhận</label>
+                            <textarea
+                                name="admin_note"
+                                id="confirm_admin_note"
+                                rows="3"
+                                class="form-control"
+                                placeholder="Ví dụ: Đã kiểm tra thông tin người nhận, tồn kho đầy đủ."
+                            >{{ old('admin_note') }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle me-1"></i> Xác nhận đơn hàng
+                        </button>
+                    </form>
+                @endif
+
+                @if ($order->canBeCancelled())
+                    <form
+                        action="{{ route('admin.orders.cancel', $order) }}"
+                        method="POST"
+                        onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này không?');"
+                    >
+                        @csrf
+                        @method('PATCH')
+                        <div class="mb-3">
+                            <label for="cancel_reason" class="form-label">Lý do hủy đơn</label>
+                            <input
+                                type="text"
+                                name="cancel_reason"
+                                id="cancel_reason"
+                                class="form-control"
+                                value="{{ old('cancel_reason') }}"
+                                placeholder="Nhập lý do hủy đơn hàng"
+                                required
+                            >
+                        </div>
+                        <div class="mb-3">
+                            <label for="cancel_admin_note" class="form-label">Ghi chú nội bộ</label>
+                            <textarea
+                                name="admin_note"
+                                id="cancel_admin_note"
+                                rows="3"
+                                class="form-control"
+                                placeholder="Ghi chú thêm cho bộ phận xử lý hoặc CSKH."
+                            >{{ old('admin_note') }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
+                        </button>
+                    </form>
+                @endif
+
+                @if ($order->status !== \App\Models\Order::STATUS_PENDING && ! $order->canBeCancelled())
+                    <div class="alert alert-light border mb-0">
+                        Đơn hàng này hiện không còn thao tác xác nhận hoặc hủy trong màn hình này.
+                    </div>
+                @endif
+            </div>
             <div class="stat-card p-4 mb-4">
                 <h3 class="h5 fw-bold mb-3">Thông tin khách hàng</h3>
                 <dl class="row mb-0">

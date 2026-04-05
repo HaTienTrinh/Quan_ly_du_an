@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderStatusHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -87,15 +90,129 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
+        $this->loadOrderDetails($order);
+
+        return view('admin.orders.show', [
+            'order' => $order,
+        ]);
+    }
+
+    public function confirm(Request $request, Order $order)
+    {
+        if ($order->status !== Order::STATUS_PENDING) {
+            return back()->with('error', 'Chỉ có thể xác nhận đơn hàng đang chờ xác nhận.');
+        }
+
+        $validated = $request->validate([
+            'admin_note' => ['nullable', 'string'],
+        ]);
+
+        $fromStatus = $order->status;
+        $adminNote = trim((string) ($validated['admin_note'] ?? ''));
+
+        DB::transaction(function () use ($order, $fromStatus, $adminNote) {
+            $payload = [
+                'status' => Order::STATUS_CONFIRMED,
+                'confirmed_by' => Auth::id(),
+                'confirmed_at' => now(),
+                'cancelled_at' => null,
+                'cancel_reason' => null,
+            ];
+
+            if ($adminNote !== '') {
+                $payload['admin_note'] = $adminNote;
+            }
+
+            $order->update($payload);
+
+            $historyNote = 'Quản trị viên đã xác nhận đơn hàng.';
+
+            if ($adminNote !== '') {
+                $historyNote .= ' Ghi chú: ' . $adminNote;
+            }
+
+            $this->recordStatusHistory(
+                order: $order,
+                fromStatus: $fromStatus,
+                toStatus: Order::STATUS_CONFIRMED,
+                note: $historyNote,
+            );
+        });
+
+        return redirect()
+            ->route('admin.orders.show', $order)
+            ->with('success', 'Đã xác nhận đơn hàng thành công.');
+    }
+
+    public function cancel(Request $request, Order $order)
+    {
+        if (! $order->canBeCancelled()) {
+            return back()->with('error', 'Đơn hàng này không thể hủy ở thời điểm hiện tại.');
+        }
+
+        $validated = $request->validate([
+            'cancel_reason' => ['required', 'string', 'max:255'],
+            'admin_note' => ['nullable', 'string'],
+        ]);
+
+        $fromStatus = $order->status;
+        $adminNote = trim((string) ($validated['admin_note'] ?? ''));
+        $cancelReason = trim((string) $validated['cancel_reason']);
+
+        DB::transaction(function () use ($order, $fromStatus, $cancelReason, $adminNote) {
+            $payload = [
+                'status' => Order::STATUS_CANCELLED,
+                'cancelled_at' => now(),
+                'cancel_reason' => $cancelReason,
+            ];
+
+            if ($adminNote !== '') {
+                $payload['admin_note'] = $adminNote;
+            }
+
+            $order->update($payload);
+
+            $historyNote = 'Quản trị viên hủy đơn. Lý do: ' . $cancelReason;
+
+            if ($adminNote !== '') {
+                $historyNote .= ' Ghi chú: ' . $adminNote;
+            }
+
+            $this->recordStatusHistory(
+                order: $order,
+                fromStatus: $fromStatus,
+                toStatus: Order::STATUS_CANCELLED,
+                note: $historyNote,
+            );
+        });
+
+        return redirect()
+            ->route('admin.orders.show', $order)
+            ->with('success', 'Đã hủy đơn hàng thành công.');
+    }
+
+    private function loadOrderDetails(Order $order): void
+    {
         $order->load([
             'user',
             'confirmedBy',
             'items.product',
             'statusHistories.changedBy',
         ]);
+    }
 
-        return view('admin.orders.show', [
-            'order' => $order,
+    private function recordStatusHistory(
+        Order $order,
+        ?string $fromStatus,
+        string $toStatus,
+        ?string $note = null
+    ): void {
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'changed_by' => Auth::id(),
+            'from_status' => $fromStatus,
+            'to_status' => $toStatus,
+            'note' => $note,
         ]);
     }
 }

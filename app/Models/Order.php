@@ -136,6 +136,21 @@ class Order extends Model
         ], true);
     }
 
+    public function canBePrepared(): bool
+    {
+        return $this->status === self::STATUS_CONFIRMED;
+    }
+
+    public function canBeShipped(): bool
+    {
+        return $this->status === self::STATUS_PROCESSING;
+    }
+
+    public function canBeCompleted(): bool
+    {
+        return $this->status === self::STATUS_SHIPPING;
+    }
+
     public function canBeReceived(): bool
     {
         return $this->status === self::STATUS_SHIPPING;
