@@ -27,6 +27,50 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        .reviews-marquee {
+            position: relative;
+            overflow: hidden;
+            mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+        }
+
+        .reviews-track {
+            display: flex;
+            gap: 1.75rem;
+            width: max-content;
+            padding-block: 0.5rem;
+            will-change: transform;
+            animation: reviews-scroll 32s linear infinite;
+        }
+
+        .reviews-marquee:hover .reviews-track {
+            animation-play-state: paused;
+        }
+
+        .review-slide {
+            flex: 0 0 340px;
+        }
+
+        @keyframes reviews-scroll {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(calc(-50% - 0.875rem));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .review-slide {
+                flex-basis: 285px;
+            }
+
+            .reviews-track {
+                animation-duration: 24s;
+            }
+        }
     </style>
 
     <main class="bg-slate-50 text-slate-800 overflow-hidden">
@@ -178,8 +222,92 @@
                 <div class="h-1.5 w-16 bg-orange-400 rounded-full mx-auto mt-4"></div>
             </div>
 
+            <div class="hidden">
+                <h3 class="text-3xl font-black text-slate-800 mb-2">
+                    Khách hàng nói gì
+                </h3>
+                <p class="text-slate-400">
+                    Trải nghiệm thực tế từ người dùng
+                </p>
+                <div class="h-1.5 w-16 bg-orange-400 rounded-full mx-auto mt-4"></div>
+            </div>
+
             <!-- Reviews -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            @if ($reviews->isNotEmpty())
+                @php
+                    $reviewGroups = [$reviews, $reviews];
+                @endphp
+
+                <div class="reviews-marquee">
+                    <div class="reviews-track">
+                        @foreach ($reviewGroups as $groupIndex => $reviewGroup)
+                            @foreach ($reviewGroup as $review)
+                                @php
+                                    $reviewerName = $review->user?->name ?? 'Khách hàng';
+                                    $nameParts = preg_split('/\s+/u', trim($reviewerName), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                                    $initials = collect($nameParts)
+                                        ->take(2)
+                                        ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
+                                        ->implode('');
+                                    $reviewContent = filled($review->comment)
+                                        ? $review->comment
+                                        : 'Sản phẩm đúng mô tả, trải nghiệm mua hàng rất ổn.';
+                                @endphp
+
+                                <article
+                                    class="review-slide glass-light p-6 rounded-[28px] space-y-4 hover:scale-[1.02] transition"
+                                    @if ($groupIndex === 1) aria-hidden="true" @endif>
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="flex text-orange-400 text-lg">
+                                            @for ($star = 1; $star <= 5; $star++)
+                                                <span>{!! $star <= $review->rating ? '&#9733;' : '&#9734;' !!}</span>
+                                            @endfor
+                                        </div>
+
+                                        <span
+                                            class="max-w-[11rem] truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                                            {{ $review->product?->name ?? 'Sản phẩm' }}
+                                        </span>
+                                    </div>
+
+                                    <p class="min-h-24 text-slate-600 leading-relaxed">
+                                        &ldquo;{{ $reviewContent }}&rdquo;
+                                    </p>
+
+                                    <div class="flex items-center gap-3 pt-4">
+                                        @if ($review->user?->avatar_url)
+                                            <img
+                                                src="{{ $review->user->avatar_url }}"
+                                                alt="{{ $reviewerName }}"
+                                                class="h-10 w-10 rounded-full object-cover">
+                                        @else
+                                            <div
+                                                class="w-10 h-10 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center font-bold">
+                                                {{ $initials !== '' ? $initials : 'KH' }}
+                                            </div>
+                                        @endif
+
+                                        <div>
+                                            <p class="text-sm font-bold text-slate-800">{{ $reviewerName }}</p>
+                                            <p class="text-xs text-slate-400">
+                                                Đánh giá ngày {{ $review->created_at->format('d/m/Y') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </article>
+                            @endforeach
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                <div class="glass-light rounded-[28px] p-10 text-center">
+                    <p class="text-slate-500">
+                        Chưa có đánh giá nào từ khách hàng. Hãy là người đầu tiên chia sẻ trải nghiệm mua sắm.
+                    </p>
+                </div>
+            @endif
+
+            <div class="hidden">
 
                 <!-- Review Item -->
                 <div class="glass-light p-6 rounded-[28px] space-y-4 hover:scale-[1.02] transition">
