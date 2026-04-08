@@ -14,6 +14,18 @@
             'returned' => 'bg-slate-200 text-slate-700',
         ];
 
+        $returnStatusClasses = [
+            'pending' => 'bg-amber-100 text-amber-700',
+            'approved' => 'bg-blue-100 text-blue-700',
+            'shipping_back' => 'bg-indigo-100 text-indigo-700',
+            'received' => 'bg-slate-200 text-slate-700',
+            'inspecting' => 'bg-slate-900 text-white',
+            'refunded' => 'bg-emerald-100 text-emerald-700',
+            'exchanged' => 'bg-emerald-100 text-emerald-700',
+            'completed' => 'bg-emerald-600 text-white',
+            'rejected' => 'bg-red-100 text-red-700',
+        ];
+
         $emptyMessages = [
             'all' => 'Bạn chưa có đơn hàng nào.',
             'pending' => 'Không có đơn hàng nào đang chờ xác nhận.',
@@ -21,7 +33,7 @@
             'processing' => 'Không có đơn hàng nào đang chuẩn bị hàng.',
             'shipping' => 'Không có đơn hàng nào đang giao hàng.',
             'delivered' => 'Không có đơn hàng nào đã giao thành công.',
-            'returned' => 'Chưa có đơn hàng trả hàng nào. Trả hàng chỉ áp dụng sau khi đơn đã hoàn thành.',
+            'returned' => 'Chưa có yêu cầu trả hàng nào.',
             'cancelled' => 'Không có đơn hàng nào đã hủy.',
         ];
     @endphp
@@ -35,7 +47,7 @@
                     </p>
                     <h1 class="text-4xl font-extrabold text-slate-900 md:text-5xl">Đơn hàng của tôi</h1>
                     <p class="mt-3 text-lg text-slate-500">
-                        Đơn hàng được chia theo từng trạng thái để bạn theo dõi, xử lý và mua lại nhanh hơn.
+                        Theo dõi đơn hàng, gửi yêu cầu trả hàng và xử lý các bước sau mua tại một nơi.
                     </p>
                 </div>
 
@@ -73,7 +85,7 @@
 
                 @if ($selectedStatus === 'returned')
                     <p class="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                        Trả hàng chỉ phát sinh sau khi đơn hàng đã được giao thành công và hoàn tất.
+                        Tab này hiển thị các đơn có phát sinh yêu cầu trả hàng, không làm thay đổi trạng thái giao hàng gốc của đơn.
                     </p>
                 @endif
             </div>
@@ -122,6 +134,16 @@
                                         class="mt-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $statusClasses[$order->status] ?? 'bg-slate-100 text-slate-700' }}">
                                         {{ $order->status_label }}
                                     </span>
+
+                                    @if ($order->latestReturnRequest)
+                                        <div class="mt-3">
+                                            <p class="text-sm text-slate-500">Yêu cầu trả hàng mới nhất</p>
+                                            <span
+                                                class="mt-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $returnStatusClasses[$order->latestReturnRequest->status] ?? 'bg-slate-100 text-slate-700' }}">
+                                                {{ $order->latestReturnRequest->status_label }}
+                                            </span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 
@@ -159,6 +181,13 @@
                                             Xác nhận đã nhận hàng
                                         </button>
                                     </form>
+                                @endif
+
+                                @if ($order->canBeReturned() && $order->return_requests_count < $order->items_count)
+                                    <a href="{{ route('orders.returns.create', $order) }}"
+                                        class="inline-flex items-center rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-200">
+                                        Yêu cầu trả hàng
+                                    </a>
                                 @endif
 
                                 @if ($order->status === \App\Models\Order::STATUS_CANCELLED)

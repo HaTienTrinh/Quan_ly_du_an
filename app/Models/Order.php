@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class Order extends Model
 {
@@ -156,6 +157,34 @@ class Order extends Model
         return $this->status === self::STATUS_SHIPPING;
     }
 
+    public function canBeReturned(): bool
+    {
+        if ($this->status !== self::STATUS_DELIVERED) {
+            return false;
+        }
+
+        $returnDeadline = $this->getReturnDeadlineAt();
+
+        return $returnDeadline !== null && now()->lte($returnDeadline);
+    }
+
+    public function getDeliveredAt(): ?Carbon
+    {
+        $history = $this->relationLoaded('statusHistories')
+            ? $this->statusHistories->firstWhere('to_status', self::STATUS_DELIVERED)
+            : $this->statusHistories()
+                ->where('to_status', self::STATUS_DELIVERED)
+                ->latest('created_at')
+                ->first();
+
+        return $history?->created_at;
+    }
+
+    public function getReturnDeadlineAt(): ?Carbon
+    {
+        return $this->getDeliveredAt()?->copy()->addDays(7);
+    }
+
     // ============ SCOPES ============
 
     public function scopeByStatus($query, string $status)
@@ -181,6 +210,16 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function returnRequests()
+    {
+        return $this->hasMany(ReturnRequest::class);
+    }
+
+    public function latestReturnRequest()
+    {
+        return $this->hasOne(ReturnRequest::class)->latestOfMany();
     }
 
     // Lịch sử thay đổi trạng thái

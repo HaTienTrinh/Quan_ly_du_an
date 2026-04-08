@@ -14,6 +14,18 @@
             'returned' => 'bg-slate-200 text-slate-700',
         ];
 
+        $returnStatusClasses = [
+            'pending' => 'bg-amber-100 text-amber-700',
+            'approved' => 'bg-blue-100 text-blue-700',
+            'shipping_back' => 'bg-indigo-100 text-indigo-700',
+            'received' => 'bg-slate-200 text-slate-700',
+            'inspecting' => 'bg-slate-900 text-white',
+            'refunded' => 'bg-emerald-100 text-emerald-700',
+            'exchanged' => 'bg-emerald-100 text-emerald-700',
+            'completed' => 'bg-emerald-600 text-white',
+            'rejected' => 'bg-red-100 text-red-700',
+        ];
+
         $steps = [
             'pending' => 'Chờ xác nhận',
             'confirmed' => 'Đã xác nhận',
@@ -27,6 +39,7 @@
         $currentIndex = $currentIndex === false ? -1 : $currentIndex;
         $sortedHistories = $order->statusHistories->sortBy('created_at');
         $reachedStatuses = $sortedHistories->pluck('to_status')->all();
+        $canCreateReturnRequest = $order->canBeReturned() && $order->items->contains(fn ($item) => $item->returnRequest === null);
     @endphp
 
     <div class="min-h-screen bg-slate-50 pt-12">
@@ -64,6 +77,13 @@
                             class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold {{ $statusClasses[$order->status] ?? 'bg-slate-100 text-slate-700' }}">
                             {{ $order->status_label }}
                         </span>
+
+                        @if ($canCreateReturnRequest)
+                            <a href="{{ route('orders.returns.create', $order) }}"
+                                class="rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-200">
+                                Yêu cầu trả hàng
+                            </a>
+                        @endif
 
                         @if ($order->canBeCancelled())
                             <form action="{{ route('orders.cancel', $order) }}" method="POST"
@@ -170,6 +190,12 @@
                                         <p class="mt-1 text-sm text-slate-500">
                                             {{ number_format($item->unit_price, 0, ',', '.') }} ₫ x {{ $item->quantity }}
                                         </p>
+
+                                        @if ($item->returnRequest)
+                                            <div class="mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $returnStatusClasses[$item->returnRequest->status] ?? 'bg-slate-100 text-slate-700' }}">
+                                                Trả hàng: {{ $item->returnRequest->status_label }}
+                                            </div>
+                                        @endif
                                     </div>
 
                                     <div class="text-right font-bold text-slate-900">
@@ -178,6 +204,86 @@
                                 </div>
                             @endforeach
                         </div>
+                    </div>
+
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <div class="mb-6 flex items-center justify-between gap-4">
+                            <h2 class="text-xl font-bold text-slate-900">Yêu cầu trả hàng</h2>
+                            @if ($canCreateReturnRequest)
+                                <a href="{{ route('orders.returns.create', $order) }}"
+                                    class="inline-flex items-center rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">
+                                    Tạo yêu cầu mới
+                                </a>
+                            @endif
+                        </div>
+
+                        @if ($order->returnRequests->isEmpty())
+                            <p class="text-slate-500">Đơn hàng này chưa có yêu cầu trả hàng nào.</p>
+                        @else
+                            <div class="space-y-4">
+                                @foreach ($order->returnRequests->sortByDesc('created_at') as $returnRequest)
+                                    <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div>
+                                                <div class="flex flex-wrap items-center gap-3">
+                                                    <p class="font-semibold text-slate-900">{{ $returnRequest->orderItem->product_name }}</p>
+                                                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $returnStatusClasses[$returnRequest->status] ?? 'bg-slate-100 text-slate-700' }}">
+                                                        {{ $returnRequest->status_label }}
+                                                    </span>
+                                                    <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                                                        {{ $returnRequest->request_type_label }}
+                                                    </span>
+                                                </div>
+                                                <p class="mt-2 text-sm text-slate-500">{{ $returnRequest->reason }}</p>
+                                                @if ($returnRequest->logistics_method_label)
+                                                    <p class="mt-2 text-sm text-slate-500">
+                                                        Vận chuyển trả về: {{ $returnRequest->logistics_method_label }}
+                                                    </p>
+                                                @endif
+                                                @if ($returnRequest->rejection_reason)
+                                                    <p class="mt-2 text-sm font-medium text-red-600">
+                                                        Từ chối: {{ $returnRequest->rejection_reason }}
+                                                    </p>
+                                                @endif
+                                            </div>
+
+                                            <p class="text-sm text-slate-500">{{ $returnRequest->created_at->format('d/m/Y H:i') }}</p>
+                                        </div>
+
+                                        @if (! empty($returnRequest->evidence_urls))
+                                            <div class="mt-4 flex flex-wrap gap-3">
+                                                @foreach ($returnRequest->evidence_urls as $index => $url)
+                                                    <a href="{{ $url }}" target="_blank"
+                                                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-orange-300 hover:text-orange-500">
+                                                        Minh chứng {{ $index + 1 }}
+                                                    </a>
+                                                @endforeach
+                                            </div>
+                                        @endif
+
+                                        @if ($returnRequest->statusHistories->isNotEmpty())
+                                            <div class="mt-4 space-y-3 border-t border-slate-200 pt-4">
+                                                @foreach ($returnRequest->statusHistories as $history)
+                                                    <div class="rounded-xl bg-white px-4 py-3">
+                                                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                            <div class="text-sm font-semibold text-slate-900">
+                                                                {{ \App\Models\ReturnRequest::STATUS_LABELS[$history->to_status] ?? $history->to_status }}
+                                                            </div>
+                                                            <div class="text-sm text-slate-500">
+                                                                {{ $history->created_at->format('d/m/Y H:i') }}
+                                                            </div>
+                                                        </div>
+                                                        <p class="mt-2 text-sm text-slate-500">
+                                                            {{ $history->note ?: 'Không có ghi chú.' }}
+                                                        </p>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
 
                     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

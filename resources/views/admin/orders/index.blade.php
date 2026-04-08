@@ -70,6 +70,10 @@
                 </div>
             @endif
         </form>
+
+        <a href="{{ route('admin.return-requests.index') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-repeat me-1"></i> Yêu cầu trả hàng
+        </a>
     </div>
 
     <div class="stat-card overflow-hidden">
@@ -147,4 +151,3 @@
         @endif
     </div>
 @endsection
-
