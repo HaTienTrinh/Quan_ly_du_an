@@ -42,4 +42,9 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function returnRequest()
+    {
+        return $this->hasOne(ReturnRequest::class);
+    }
 }

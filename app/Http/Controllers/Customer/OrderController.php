@@ -182,9 +182,29 @@ class OrderController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $ordersQuery = (clone $baseQuery)->withCount('items');
+        $returnOrdersCount = (clone $baseQuery)
+            ->where(function ($query) {
+                $query->whereHas('returnRequests')
+                    ->orWhere('status', Order::STATUS_RETURNED);
+            })
+            ->distinct('orders.id')
+            ->count('orders.id');
 
-        if ($selectedStatus !== 'all') {
+        $ordersQuery = (clone $baseQuery)
+            ->withCount(['items', 'returnRequests'])
+            ->with([
+                'statusHistories' => fn ($query) => $query
+                    ->where('to_status', Order::STATUS_DELIVERED)
+                    ->latest('created_at'),
+                'latestReturnRequest',
+            ]);
+
+        if ($selectedStatus === Order::STATUS_RETURNED) {
+            $ordersQuery->where(function ($query) {
+                $query->whereHas('returnRequests')
+                    ->orWhere('status', Order::STATUS_RETURNED);
+            });
+        } elseif ($selectedStatus !== 'all') {
             $ordersQuery->where('status', $selectedStatus);
         }
 
@@ -220,7 +240,7 @@ class OrderController extends Controller
             ],
             Order::STATUS_RETURNED => [
                 'label' => 'Trả hàng',
-                'count' => (int) ($statusCounts[Order::STATUS_RETURNED] ?? 0),
+                'count' => $returnOrdersCount,
             ],
             Order::STATUS_CANCELLED => [
                 'label' => 'Đã hủy',
@@ -241,7 +261,12 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $this->authorizeOwnedOrder($order);
-        $order->loadMissing(['items', 'statusHistories.changedBy']);
+        $order->loadMissing([
+            'items.returnRequest',
+            'statusHistories.changedBy',
+            'returnRequests.orderItem',
+            'returnRequests.statusHistories.changedBy',
+        ]);
 
         return view('customers.orders.show', [
             'order' => $order,

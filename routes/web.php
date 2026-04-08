@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\Admin\ReturnRequestController as AdminReturnRequestController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Customer\CartController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\PostCommentController;
 use App\Http\Controllers\Customer\ProductReviewController;
 use App\Http\Controllers\Customer\ProfileController;
+use App\Http\Controllers\Customer\ReturnRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -70,6 +72,17 @@ Route::prefix('admin')
         Route::patch('orders/{order}/complete', [AdminOrderController::class, 'complete'])->name('orders.complete');
         Route::patch('orders/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('orders.cancel');
         Route::resource('orders', AdminOrderController::class)->only(['index', 'show']);
+
+        Route::get('return-requests', [AdminReturnRequestController::class, 'index'])->name('return-requests.index');
+        Route::get('return-requests/{returnRequest}', [AdminReturnRequestController::class, 'show'])->name('return-requests.show');
+        Route::patch('return-requests/{returnRequest}/approve', [AdminReturnRequestController::class, 'approve'])->name('return-requests.approve');
+        Route::patch('return-requests/{returnRequest}/reject', [AdminReturnRequestController::class, 'reject'])->name('return-requests.reject');
+        Route::patch('return-requests/{returnRequest}/shipping-back', [AdminReturnRequestController::class, 'shippingBack'])->name('return-requests.shipping-back');
+        Route::patch('return-requests/{returnRequest}/receive', [AdminReturnRequestController::class, 'receive'])->name('return-requests.receive');
+        Route::patch('return-requests/{returnRequest}/inspect', [AdminReturnRequestController::class, 'inspect'])->name('return-requests.inspect');
+        Route::patch('return-requests/{returnRequest}/refund', [AdminReturnRequestController::class, 'refund'])->name('return-requests.refund');
+        Route::patch('return-requests/{returnRequest}/exchange', [AdminReturnRequestController::class, 'exchange'])->name('return-requests.exchange');
+        Route::patch('return-requests/{returnRequest}/complete', [AdminReturnRequestController::class, 'complete'])->name('return-requests.complete');
     });
 
 Route::middleware(['auth', 'customer'])->group(function () {
@@ -98,6 +111,8 @@ Route::middleware(['auth', 'customer'])->group(function () {
     Route::get('/orders/{order}/confirmation', [OrderController::class, 'confirmation'])->name('orders.confirmation');
     Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::patch('/orders/{order}/receive', [OrderController::class, 'receive'])->name('orders.receive');
+    Route::get('/orders/{order}/returns/create', [ReturnRequestController::class, 'create'])->name('orders.returns.create');
+    Route::post('/orders/{order}/returns', [ReturnRequestController::class, 'store'])->name('orders.returns.store');
     Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
