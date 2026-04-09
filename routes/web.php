@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminInspectionController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\ReturnRequestController as AdminReturnRequestController;
+use App\Http\Controllers\Admin\ReshipController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Customer\CartController;
@@ -80,9 +82,21 @@ Route::prefix('admin')
         Route::patch('return-requests/{returnRequest}/shipping-back', [AdminReturnRequestController::class, 'shippingBack'])->name('return-requests.shipping-back');
         Route::patch('return-requests/{returnRequest}/receive', [AdminReturnRequestController::class, 'receive'])->name('return-requests.receive');
         Route::patch('return-requests/{returnRequest}/inspect', [AdminReturnRequestController::class, 'inspect'])->name('return-requests.inspect');
+        // Xử lý kết quả kiểm tra: 2 nút "Hàng hợp lệ" / "Hàng gian lận"
+        Route::post('return-requests/{returnRequest}/process-inspection', [AdminReturnRequestController::class, 'processInspection'])->name('return-requests.process-inspection');
         Route::patch('return-requests/{returnRequest}/refund', [AdminReturnRequestController::class, 'refund'])->name('return-requests.refund');
         Route::patch('return-requests/{returnRequest}/exchange', [AdminReturnRequestController::class, 'exchange'])->name('return-requests.exchange');
         Route::patch('return-requests/{returnRequest}/complete', [AdminReturnRequestController::class, 'complete'])->name('return-requests.complete');
+
+        // ===== INSPECTION (Kiểm tra hàng) =====
+        // Bước bắt buộc trong quy trình xử lý yêu cầu hoàn/đổi
+        Route::get('inspections', [AdminInspectionController::class, 'index'])->name('inspections.index');
+        Route::get('inspections/{returnRequest}', [AdminInspectionController::class, 'show'])->name('inspections.show');
+        Route::post('inspections/{returnRequest}', [AdminInspectionController::class, 'process'])->name('inspections.process');
+
+        // ===== RESHIP (Gửi lại hàng) =====
+        Route::get('reships', [ReshipController::class, 'index'])->name('reships.index');
+        Route::patch('reships/{reship}', [ReshipController::class, 'update'])->name('reships.update');
     });
 
 Route::middleware(['auth', 'customer'])->group(function () {

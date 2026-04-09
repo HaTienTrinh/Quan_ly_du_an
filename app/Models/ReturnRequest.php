@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ReturnRequest extends Model
 {
@@ -27,15 +27,15 @@ class ReturnRequest extends Model
     public const LOGISTICS_SYSTEM_PICKUP = 'system_pickup';
 
     public const STATUS_LABELS = [
-        self::STATUS_PENDING => 'Pending',
-        self::STATUS_APPROVED => 'Approved',
-        self::STATUS_SHIPPING_BACK => 'Shipping Back',
-        self::STATUS_RECEIVED => 'Received',
-        self::STATUS_INSPECTING => 'Inspecting',
-        self::STATUS_REFUNDED => 'Refunded',
-        self::STATUS_EXCHANGED => 'Exchanged',
-        self::STATUS_COMPLETED => 'Completed',
-        self::STATUS_REJECTED => 'Rejected',
+        self::STATUS_PENDING => 'Chờ xử lý',
+        self::STATUS_APPROVED => 'Đã duyệt',
+        self::STATUS_SHIPPING_BACK => 'Đang vận chuyển về',
+        self::STATUS_RECEIVED => 'Đã nhận hàng trả về',
+        self::STATUS_INSPECTING => 'Đang kiểm tra',
+        self::STATUS_REFUNDED => 'Đã hoàn tiền',
+        self::STATUS_EXCHANGED => 'Đã xác nhận đổi hàng',
+        self::STATUS_COMPLETED => 'Hoàn tất',
+        self::STATUS_REJECTED => 'Đã từ chối',
     ];
 
     public const TYPE_LABELS = [
@@ -45,13 +45,15 @@ class ReturnRequest extends Model
 
     public const LOGISTICS_LABELS = [
         self::LOGISTICS_CUSTOMER_SHIP => 'Khách tự gửi hàng về',
-        self::LOGISTICS_SYSTEM_PICKUP => 'Hệ thống đến lấy hàng',
+        self::LOGISTICS_SYSTEM_PICKUP => 'Cửa hàng đến lấy hàng',
     ];
 
     protected $fillable = [
         'order_id',
         'order_item_id',
         'user_id',
+        'replacement_order_id',
+        'exchange_color_id',    // Biến thể (màu+size) khách muốn đổi sang
         'request_type',
         'status',
         'reason',
@@ -101,9 +103,26 @@ class ReturnRequest extends Model
 
     public function getEvidenceUrlsAttribute(): array
     {
+        return collect($this->evidence_assets)
+            ->pluck('url')
+            ->all();
+    }
+
+    public function getEvidenceAssetsAttribute(): array
+    {
         return collect($this->evidence_paths ?? [])
             ->filter()
-            ->map(fn (string $path) => Storage::disk('public')->url($path))
+            ->values()
+            ->map(function (string $path, int $index) {
+                $normalizedPath = $this->normalizeEvidencePath($path);
+                $extension = Str::lower(pathinfo(parse_url($normalizedPath, PHP_URL_PATH) ?? $normalizedPath, PATHINFO_EXTENSION));
+
+                return [
+                    'name' => 'Minh chứng ' . ($index + 1),
+                    'url' => $this->resolveEvidenceUrl($normalizedPath),
+                    'type' => $this->detectEvidenceType($extension),
+                ];
+            })
             ->values()
             ->all();
     }
@@ -163,8 +182,92 @@ class ReturnRequest extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function replacementOrder()
+    {
+        return $this->belongsTo(Order::class, 'replacement_order_id');
+    }
+
+    // Biến thể (màu + size) khách muốn đổi sang
+    public function exchangeColor()
+    {
+        return $this->belongsTo(ProductColor::class, 'exchange_color_id');
+    }
+
     public function statusHistories()
     {
         return $this->hasMany(ReturnRequestStatusHistory::class)->latest();
+    }
+
+    // ReturnRequest có 1 Inspection (kết quả kiểm tra hàng)
+    public function inspection()
+    {
+        return $this->hasOne(Inspection::class, 'return_id');
+    }
+
+    // ReturnRequest có 1 Reship (gửi lại hàng)
+    public function reship()
+    {
+        return $this->hasOne(Reship::class, 'return_id');
+    }
+
+    // ReturnRequest có 1 Refund (hoàn tiền)
+    public function refund()
+    {
+        return $this->hasOne(Refund::class, 'return_id');
+    }
+
+    private function resolveEvidenceUrl(string $path): string
+    {
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $path = $this->normalizeEvidencePath($path);
+
+        if (Str::startsWith($path, '/storage/')) {
+            return asset(ltrim($path, '/'));
+        }
+
+        if (Str::startsWith($path, 'storage/')) {
+            return asset($path);
+        }
+
+        return asset('storage/' . ltrim($path, '/'));
+    }
+
+    private function detectEvidenceType(string $extension): string
+    {
+        return match (true) {
+            in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg'], true) => 'image',
+            in_array($extension, ['mp4', 'mov', 'webm', 'm4v'], true) => 'video',
+            default => 'file',
+        };
+    }
+
+    private function normalizeEvidencePath(string $path): string
+    {
+        $normalizedPath = trim(str_replace('\\', '/', $path));
+
+        if ($normalizedPath === '') {
+            return $normalizedPath;
+        }
+
+        if (Str::startsWith($normalizedPath, ['http://', 'https://', '/storage/', 'storage/'])) {
+            return $normalizedPath;
+        }
+
+        if (Str::startsWith($normalizedPath, 'public/storage/')) {
+            return 'storage/' . ltrim(Str::after($normalizedPath, 'public/storage/'), '/');
+        }
+
+        if (Str::startsWith($normalizedPath, 'storage/app/public/')) {
+            return 'storage/' . ltrim(Str::after($normalizedPath, 'storage/app/public/'), '/');
+        }
+
+        if (Str::startsWith($normalizedPath, 'public/')) {
+            return ltrim(Str::after($normalizedPath, 'public/'), '/');
+        }
+
+        return ltrim($normalizedPath, '/');
     }
 }

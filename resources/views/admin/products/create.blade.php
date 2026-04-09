@@ -79,6 +79,44 @@
                         <label class="form-check-label" for="is_active">Hiển thị sản phẩm</label>
                     </div>
                 </div>
+
+                @php
+                    $oldColors = old('colors', [['name' => '', 'hex_code' => '#000000']]);
+                @endphp
+
+                <div class="col-12">
+                    <div class="border rounded-3 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <label class="form-label fw-medium mb-1">Màu máy</label>
+                                <div class="form-text">Các màu khách có thể chọn khi mua hoặc khi đổi hàng.</div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="add-color-row">Thêm màu</button>
+                        </div>
+
+                        <div id="color-rows" class="d-flex flex-column gap-2">
+                            @foreach ($oldColors as $index => $color)
+                                <div class="row g-2 align-items-center color-row">
+                                    <div class="col-md-6">
+                                        <input type="text" name="colors[{{ $index }}][name]"
+                                            value="{{ $color['name'] ?? '' }}"
+                                            class="form-control @error('colors.' . $index . '.name') is-invalid @enderror"
+                                            placeholder="Tên màu, ví dụ: Titan tự nhiên">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="color" name="colors[{{ $index }}][hex_code]"
+                                            value="{{ $color['hex_code'] ?: '#000000' }}"
+                                            class="form-control form-control-color w-100 @error('colors.' . $index . '.hex_code') is-invalid @enderror"
+                                            title="Mã màu">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-outline-danger w-100 remove-color-row">Xóa</button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="d-flex gap-2 mt-4">
@@ -89,4 +127,62 @@
             </div>
         </form>
     </div>
+
+    <template id="color-row-template">
+        <div class="row g-2 align-items-center color-row">
+            <div class="col-md-6">
+                <input type="text" data-field="name" class="form-control" placeholder="Tên màu, ví dụ: Titan tự nhiên">
+            </div>
+            <div class="col-md-4">
+                <input type="color" data-field="hex_code" value="#000000" class="form-control form-control-color w-100" title="Mã màu">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-danger w-100 remove-color-row">Xóa</button>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rowsContainer = document.getElementById('color-rows');
+            const template = document.getElementById('color-row-template');
+            const addButton = document.getElementById('add-color-row');
+
+            if (!rowsContainer || !template || !addButton) {
+                return;
+            }
+
+            function reindexRows() {
+                Array.from(rowsContainer.querySelectorAll('.color-row')).forEach((row, index) => {
+                    row.querySelector('input[type="text"]').setAttribute('name', `colors[${index}][name]`);
+                    row.querySelector('input[type="color"]').setAttribute('name', `colors[${index}][hex_code]`);
+                });
+            }
+
+            addButton.addEventListener('click', function () {
+                const fragment = template.content.cloneNode(true);
+                rowsContainer.appendChild(fragment);
+                reindexRows();
+            });
+
+            rowsContainer.addEventListener('click', function (event) {
+                if (!event.target.classList.contains('remove-color-row')) {
+                    return;
+                }
+
+                const rows = rowsContainer.querySelectorAll('.color-row');
+
+                if (rows.length === 1) {
+                    rows[0].querySelector('input[type="text"]').value = '';
+                    rows[0].querySelector('input[type="color"]').value = '#000000';
+                    return;
+                }
+
+                event.target.closest('.color-row')?.remove();
+                reindexRows();
+            });
+
+            reindexRows();
+        });
+    </script>
 @endsection

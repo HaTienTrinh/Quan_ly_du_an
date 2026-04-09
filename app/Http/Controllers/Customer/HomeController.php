@@ -101,6 +101,7 @@ class HomeController extends Controller
 
         $product->load([
             'category',
+            'colors',
             'images',
             'reviews.user',
         ]);

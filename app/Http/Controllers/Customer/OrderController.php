@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Product;
+use App\Models\ProductColor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +60,7 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'selected_items' => 'required|array|min:1',
-            'selected_items.*' => 'integer',
+            'selected_items.*' => 'string',
             'receiver_name' => 'required|string|max:255',
             'receiver_phone' => 'required|string|max:20',
             'receiver_province' => 'required|string|max:255',
@@ -106,7 +107,10 @@ class OrderController extends Controller
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
+                    'product_color_id' => $item['product_color_id'] ?? null,
                     'product_name' => $item['product_name'],
+                    'product_color_name' => $item['product_color_name'] ?? null,
+                    'product_color_hex' => $item['product_color_hex'] ?? null,
                     'product_thumbnail' => $item['product_thumbnail'],
                     'unit_price' => $item['unit_price'],
                     'quantity' => $item['quantity'],
@@ -146,7 +150,7 @@ class OrderController extends Controller
     public function confirmation(Order $order)
     {
         $this->authorizeOwnedOrder($order);
-        $order->loadMissing('items');
+        $order->loadMissing(['items.productColor']);
 
         return view('customers.checkout.confirmation', [
             'order' => $order,
@@ -262,9 +266,11 @@ class OrderController extends Controller
     {
         $this->authorizeOwnedOrder($order);
         $order->loadMissing([
+            'items.productColor',
             'items.returnRequest',
             'statusHistories.changedBy',
-            'returnRequests.orderItem',
+            'returnRequests.orderItem.productColor',
+            'returnRequests.replacementOrder',
             'returnRequests.statusHistories.changedBy',
         ]);
 
@@ -363,7 +369,7 @@ class OrderController extends Controller
             return back()->with('error', 'Chỉ có thể mua lại từ các đơn hàng đã hủy.');
         }
 
-        $order->loadMissing('items');
+        $order->loadMissing(['items.productColor']);
 
         $productIds = $order->items
             ->pluck('product_id')
@@ -396,19 +402,26 @@ class OrderController extends Controller
                 continue;
             }
 
-            if (isset($cart[$product->id])) {
-                $cart[$product->id]['quantity'] += $quantity;
+            $productColor = $this->resolveProductColorForReorder($item);
+            $itemKey = $this->buildCartItemKey($product->id, $productColor?->id);
+
+            if (isset($cart[$itemKey])) {
+                $cart[$itemKey]['quantity'] += $quantity;
             } else {
-                $cart[$product->id] = [
+                $cart[$itemKey] = [
+                    'item_key' => $itemKey,
                     'product_id' => $product->id,
                     'product_name' => $product->name,
+                    'product_color_id' => $productColor?->id,
+                    'product_color_name' => $productColor?->name ?? $item->product_color_name,
+                    'product_color_hex' => $productColor?->hex_code ?? $item->product_color_hex,
                     'product_thumbnail' => $product->thumbnail,
                     'unit_price' => $product->price,
                     'quantity' => $quantity,
                 ];
             }
 
-            $cart[$product->id]['subtotal'] = $cart[$product->id]['unit_price'] * $cart[$product->id]['quantity'];
+            $cart[$itemKey]['subtotal'] = $cart[$itemKey]['unit_price'] * $cart[$itemKey]['quantity'];
             $addedCount++;
         }
 
@@ -466,5 +479,26 @@ class OrderController extends Controller
         return collect($cart)
             ->filter(fn ($item, $productId) => in_array((string) $productId, $selectedItems, true))
             ->all();
+    }
+
+    private function resolveProductColorForReorder(OrderItem $item): ?ProductColor
+    {
+        if ($item->productColor) {
+            return $item->productColor;
+        }
+
+        if (! $item->product_id || ! $item->product_color_name) {
+            return null;
+        }
+
+        return ProductColor::query()
+            ->where('product_id', $item->product_id)
+            ->where('name', $item->product_color_name)
+            ->first();
+    }
+
+    private function buildCartItemKey(int $productId, ?int $productColorId): string
+    {
+        return $productId . '-' . ($productColorId ?? 0);
     }
 }

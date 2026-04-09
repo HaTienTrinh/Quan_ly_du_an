@@ -21,6 +21,7 @@ class User extends Authenticatable
         'birth_date',
         'avatar',
         'is_active',
+        'violation_count', // Số lần bị phát hiện gian lận
     ];
 
     protected $hidden = [

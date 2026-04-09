@@ -12,7 +12,11 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'product_color_id',
         'product_name',
+        'product_color_name',
+        'product_color_hex',
+        'product_size',       // Snapshot size tại thời điểm mua
         'product_thumbnail',
         'unit_price',
         'quantity',
@@ -41,6 +45,11 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function productColor()
+    {
+        return $this->belongsTo(ProductColor::class);
     }
 
     public function returnRequest()
