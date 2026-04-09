@@ -266,6 +266,7 @@ class OrderController extends Controller
             'user',
             'confirmedBy',
             'items.product',
+            'items.productColor',
             'statusHistories.changedBy',
         ]);
     }

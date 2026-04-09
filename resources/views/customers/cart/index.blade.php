@@ -70,14 +70,14 @@
                             <div class="divide-y divide-slate-200">
                                 @foreach ($cart as $item)
                                     <div class="cart-item p-6 transition hover:bg-slate-50"
-                                        data-product-id="{{ $item['product_id'] }}"
+                                        data-product-id="{{ $item['item_key'] ?? $item['product_id'] }}"
                                         data-subtotal="{{ (float) $item['subtotal'] }}"
                                         data-quantity="{{ (int) $item['quantity'] }}">
                                         <div class="flex gap-4">
                                             <div class="pt-8">
                                                 <input type="checkbox"
                                                     class="cart-item-checkbox h-5 w-5 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
-                                                    value="{{ $item['product_id'] }}" checked>
+                                                    value="{{ $item['item_key'] ?? $item['product_id'] }}" checked>
                                             </div>
 
                                             <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg">
@@ -96,11 +96,17 @@
                                                     {{ $item['product_name'] }}
                                                 </h3>
 
+                                                @if (! empty($item['product_color_name']))
+                                                    <p class="mb-2 text-sm text-slate-500">
+                                                        Màu máy: {{ $item['product_color_name'] }}
+                                                    </p>
+                                                @endif
+
                                                 <p class="mb-3 font-bold text-orange-500">
                                                     {{ number_format($item['unit_price'], 0, ',', '.') }} ₫
                                                 </p>
 
-                                                <form action="{{ route('cart.update', $item['product_id']) }}"
+                                                <form action="{{ route('cart.update', $item['item_key'] ?? $item['product_id']) }}"
                                                     method="POST"
                                                     class="mb-3 flex items-center gap-2">
                                                     @csrf
@@ -132,7 +138,7 @@
                                                     {{ number_format($item['subtotal'], 0, ',', '.') }} ₫
                                                 </div>
 
-                                                <form action="{{ route('cart.remove', $item['product_id']) }}"
+                                                <form action="{{ route('cart.remove', $item['item_key'] ?? $item['product_id']) }}"
                                                     method="POST">
                                                     @csrf
                                                     @method('DELETE')

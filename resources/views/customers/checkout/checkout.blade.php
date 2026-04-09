@@ -181,6 +181,9 @@
                             <div class="mb-3 flex justify-between text-sm">
                                 <div>
                                     <p class="font-medium text-slate-800">{{ $item['product_name'] }}</p>
+                                    @if (! empty($item['product_color_name']))
+                                        <p class="text-slate-500">Màu: {{ $item['product_color_name'] }}</p>
+                                    @endif
                                     <p class="text-slate-500">x{{ $item['quantity'] }}</p>
                                 </div>
                                 <span class="font-semibold">

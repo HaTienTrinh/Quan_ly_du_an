@@ -48,6 +48,22 @@
                     <dt class="col-sm-4 text-muted small">Tồn kho</dt>
                     <dd class="col-sm-8">{{ number_format($product->stock) }}</dd>
 
+                    <dt class="col-sm-4 text-muted small">Màu máy</dt>
+                    <dd class="col-sm-8">
+                        @if ($product->colors->isEmpty())
+                            —
+                        @else
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach ($product->colors as $color)
+                                    <span class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center gap-2 px-3 py-2">
+                                        <span class="rounded-circle border" style="width: 12px; height: 12px; background-color: {{ $color->hex_code ?: '#cccccc' }};"></span>
+                                        {{ $color->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+                    </dd>
+
                     <dt class="col-sm-4 text-muted small">Mô tả</dt>
                     <dd class="col-sm-8">{{ $product->description ?: '—' }}</dd>
 

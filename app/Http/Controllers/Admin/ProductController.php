@@ -53,6 +53,9 @@ class ProductController extends Controller
             'sale_price'  => ['nullable', 'numeric', 'min:0', 'lte:price'],
             'stock'       => ['required', 'integer', 'min:0'],
             'thumbnail'   => ['nullable', 'image', 'max:4096'],
+            'colors'      => ['nullable', 'array'],
+            'colors.*.name' => ['nullable', 'string', 'max:255'],
+            'colors.*.hex_code' => ['nullable', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -61,7 +64,8 @@ class ProductController extends Controller
             $data['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
         }
 
-        Product::create($data);
+        $product = Product::create($data);
+        $this->syncColors($product, $request->input('colors', []));
 
         return redirect()
             ->route('admin.products.index')
@@ -74,6 +78,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $product->load('colors');
 
         return view('admin.products.edit', compact('product', 'categories'));
     }
@@ -88,6 +93,9 @@ class ProductController extends Controller
             'sale_price'  => ['nullable', 'numeric', 'min:0', 'lte:price'],
             'stock'       => ['required', 'integer', 'min:0'],
             'thumbnail'   => ['nullable', 'image', 'max:4096'],
+            'colors'      => ['nullable', 'array'],
+            'colors.*.name' => ['nullable', 'string', 'max:255'],
+            'colors.*.hex_code' => ['nullable', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -100,6 +108,7 @@ class ProductController extends Controller
         }
 
         $product->update($data);
+        $this->syncColors($product, $request->input('colors', []));
 
         return redirect()
             ->route('admin.products.index')
@@ -162,8 +171,39 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load('category');
+        $product->load(['category', 'colors']);
 
         return view('admin.products.show', compact('product'));
+    }
+
+    private function syncColors(Product $product, array $colors): void
+    {
+        $normalizedColors = collect($colors)
+            ->map(function ($color) {
+                $name = trim((string) ($color['name'] ?? ''));
+                $hexCode = strtoupper(trim((string) ($color['hex_code'] ?? '')));
+
+                if ($name === '') {
+                    return null;
+                }
+
+                if ($hexCode !== '' && ! Str::startsWith($hexCode, '#')) {
+                    $hexCode = '#' . $hexCode;
+                }
+
+                return [
+                    'name' => $name,
+                    'hex_code' => $hexCode !== '' ? $hexCode : null,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        $product->colors()->delete();
+
+        if ($normalizedColors !== []) {
+            $product->colors()->createMany($normalizedColors);
+        }
     }
 }

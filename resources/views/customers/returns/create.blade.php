@@ -15,7 +15,7 @@
                 <p class="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Yêu cầu trả hàng</p>
                 <h1 class="mt-3 text-3xl font-extrabold text-slate-900">Đơn {{ $order->order_code }}</h1>
                 <p class="mt-3 text-slate-500">
-                    Chọn đúng sản phẩm cần xử lý, nhập lý do và gửi minh chứng để hệ thống kiểm duyệt.
+                    Chọn đúng sản phẩm cần xử lý, cách xử lý mong muốn và phương án gửi hàng về để cửa hàng kiểm duyệt nhanh hơn.
                 </p>
             </div>
 
@@ -49,13 +49,16 @@
                                             alt="{{ $item->product_name }}" class="h-full w-full object-cover">
                                     @else
                                         <div class="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-400">
-                                            No image
+                                            Chưa có ảnh
                                         </div>
                                     @endif
                                 </div>
 
                                 <div class="flex-1">
                                     <p class="font-semibold text-slate-900">{{ $item->product_name }}</p>
+                                    @if ($item->product_color_name)
+                                        <p class="mt-1 text-sm text-slate-500">Màu máy: {{ $item->product_color_name }}</p>
+                                    @endif
                                     <p class="mt-1 text-sm text-slate-500">
                                         Số lượng: {{ $item->quantity }} · Giá mua:
                                         {{ number_format($item->unit_price, 0, ',', '.') }} ₫
@@ -74,7 +77,7 @@
                                 class="h-4 w-4 border-slate-300 text-orange-500 focus:ring-orange-500"
                                 @checked(old('request_type', 'refund') === 'refund')>
                             <p class="mt-3 font-semibold text-slate-900">Hoàn tiền</p>
-                            <p class="mt-1 text-sm text-slate-500">Hoàn lại theo phương thức phù hợp sau khi kiểm duyệt.</p>
+                            <p class="mt-1 text-sm text-slate-500">Hoàn lại tiền sau khi cửa hàng kiểm tra và xác nhận yêu cầu hợp lệ.</p>
                         </label>
 
                         <label class="cursor-pointer rounded-2xl border border-slate-200 p-4 transition hover:border-orange-300">
@@ -82,13 +85,115 @@
                                 class="h-4 w-4 border-slate-300 text-orange-500 focus:ring-orange-500"
                                 @checked(old('request_type') === 'exchange')>
                             <p class="mt-3 font-semibold text-slate-900">Đổi hàng</p>
-                            <p class="mt-1 text-sm text-slate-500">Tạo xử lý đổi sang sản phẩm thay thế sau khi kiểm tra hàng.</p>
+                            <p class="mt-1 text-sm text-slate-500">Cửa hàng sẽ gửi lại hàng thay thế sau khi yêu cầu đổi hàng hoàn tất.</p>
+                        </label>
+                    </div>
+
+                    {{-- Phần chọn màu/size — chỉ hiện khi chọn exchange VÀ sản phẩm có biến thể --}}
+                    <div id="exchangeColorSection" class="mt-5 hidden">
+                        <p class="mb-3 font-semibold text-slate-700">Chọn biến thể (màu / size) muốn đổi sang</p>
+                        <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                            @foreach ($eligibleItems as $item)
+                                @if ($item->product && $item->product->colors->isNotEmpty())
+                                    <div class="color-options" data-item-id="{{ $item->id }}" style="display:none">
+                                        @foreach ($item->product->colors as $color)
+                                            <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-orange-300">
+                                                <input type="radio" name="exchange_color_id"
+                                                    value="{{ $color->id }}"
+                                                    class="color-radio h-4 w-4 text-orange-500"
+                                                    disabled
+                                                    @checked((int) old('exchange_color_id') === $color->id)>
+                                                @if ($color->hex_code)
+                                                    <span class="h-5 w-5 rounded-full border border-slate-300 flex-shrink-0"
+                                                        style="background:{{ $color->hex_code }}"></span>
+                                                @endif
+                                                <span class="text-sm font-medium text-slate-800">
+                                                    {{ $color->display_name }}
+                                                </span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    {{-- Sản phẩm không có biến thể: đánh dấu để JS biết --}}
+                                    <div class="color-options no-variants" data-item-id="{{ $item->id }}"></div>
+                                @endif
+                            @endforeach
+                        </div>
+                        <p id="noVariantMsg" class="hidden mt-2 text-sm text-slate-500 italic">
+                            Sản phẩm này không có biến thể — sẽ đổi đúng loại đã mua.
+                        </p>
+                        @error('exchange_color_id')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <script>
+                    function updateColorSection() {
+                        const isExchange = document.querySelector('input[name="request_type"]:checked')?.value === 'exchange';
+                        const selectedItemId = document.querySelector('input[name="order_item_id"]:checked')?.value;
+                        const section = document.getElementById('exchangeColorSection');
+                        const noVariantMsg = document.getElementById('noVariantMsg');
+
+                        // Disable + ẩn tất cả trước
+                        document.querySelectorAll('.color-radio').forEach(el => el.disabled = true);
+                        document.querySelectorAll('.color-options').forEach(el => el.style.display = 'none');
+                        noVariantMsg.classList.add('hidden');
+
+                        if (!isExchange || !selectedItemId) {
+                            section.classList.add('hidden');
+                            return;
+                        }
+
+                        const colorDiv = document.querySelector(`.color-options[data-item-id="${selectedItemId}"]`);
+
+                        if (!colorDiv) {
+                            section.classList.add('hidden');
+                            return;
+                        }
+
+                        section.classList.remove('hidden');
+
+                        if (colorDiv.classList.contains('no-variants')) {
+                            // Sản phẩm không có biến thể
+                            noVariantMsg.classList.remove('hidden');
+                        } else {
+                            colorDiv.style.display = 'grid';
+                            colorDiv.style.gridTemplateColumns = 'repeat(auto-fill, minmax(160px, 1fr))';
+                            colorDiv.style.gap = '0.75rem';
+                            colorDiv.querySelectorAll('.color-radio').forEach(el => el.disabled = false);
+                        }
+                    }
+
+                    document.querySelectorAll('input[name="request_type"], input[name="order_item_id"]')
+                        .forEach(el => el.addEventListener('change', updateColorSection));
+
+                    updateColorSection();
+                </script>
+
+                <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 class="text-xl font-bold text-slate-900">3. Phương án vận chuyển về</h2>
+                    <div class="mt-5 grid gap-4 md:grid-cols-2">
+                        <label class="cursor-pointer rounded-2xl border border-slate-200 p-4 transition hover:border-orange-300">
+                            <input type="radio" name="logistics_method" value="customer_ship"
+                                class="h-4 w-4 border-slate-300 text-orange-500 focus:ring-orange-500"
+                                @checked(old('logistics_method', 'customer_ship') === 'customer_ship')>
+                            <p class="mt-3 font-semibold text-slate-900">Khách tự gửi hàng về</p>
+                            <p class="mt-1 text-sm text-slate-500">Bạn chủ động gửi hàng về cửa hàng theo hướng dẫn sau khi yêu cầu được duyệt.</p>
+                        </label>
+
+                        <label class="cursor-pointer rounded-2xl border border-slate-200 p-4 transition hover:border-orange-300">
+                            <input type="radio" name="logistics_method" value="system_pickup"
+                                class="h-4 w-4 border-slate-300 text-orange-500 focus:ring-orange-500"
+                                @checked(old('logistics_method') === 'system_pickup')>
+                            <p class="mt-3 font-semibold text-slate-900">Cửa hàng đến lấy hàng</p>
+                            <p class="mt-1 text-sm text-slate-500">Cửa hàng sẽ liên hệ để hẹn thời gian nhận lại sản phẩm từ bạn.</p>
                         </label>
                     </div>
                 </div>
 
                 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-bold text-slate-900">3. Lý do và minh chứng</h2>
+                    <h2 class="text-xl font-bold text-slate-900">4. Lý do và minh chứng</h2>
 
                     <div class="mt-5">
                         <label for="reason" class="mb-2 block text-sm font-semibold text-slate-700">Lý do trả hàng</label>

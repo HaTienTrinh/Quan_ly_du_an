@@ -25,7 +25,7 @@
                 </div>
             @endif
 
-            @if ($errors->has('rating') || $errors->has('comment'))
+            @if ($errors->any())
                 <div class="mb-8 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
                     <ul class="space-y-1">
                         @foreach ($errors->all() as $error)
@@ -130,6 +130,27 @@
                     @auth
                         <form action="{{ route('cart.add') }}" method="POST" class="mb-8">
                             @csrf
+                            @if ($product->colors->isNotEmpty())
+                                <div class="mb-5">
+                                    <label class="mb-3 block font-semibold text-slate-700">Chọn biến thể (màu / size)</label>
+                                    <div class="grid gap-3 sm:grid-cols-2">
+                                        @foreach ($product->colors as $color)
+                                            <label class="cursor-pointer">
+                                                <input type="radio" name="product_color_id" value="{{ $color->id }}"
+                                                    class="peer sr-only"
+                                                    @checked((string) old('product_color_id') === (string) $color->id)>
+                                                <span
+                                                    class="flex items-center gap-3 rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:border-orange-300">
+                                                    <span class="h-5 w-5 rounded-full border border-slate-300 flex-shrink-0"
+                                                        style="background-color: {{ $color->hex_code ?: '#d1d5db' }};"></span>
+                                                    {{ $color->display_name }}
+                                                </span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
                             <div class="mb-4 flex items-center gap-4">
                                 <label class="font-semibold text-slate-700">Số lượng:</label>
                                 <div class="flex items-center overflow-hidden rounded-lg border border-slate-300 text-gray-500">

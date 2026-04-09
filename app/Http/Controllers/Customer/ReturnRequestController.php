@@ -9,13 +9,14 @@ use App\Models\ReturnRequestStatusHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ReturnRequestController extends Controller
 {
     public function create(Order $order)
     {
         $this->authorizeOwnedOrder($order);
-        $order->loadMissing(['items.returnRequest', 'returnRequests.orderItem']);
+        $order->loadMissing(['items.returnRequest', 'items.product.colors', 'returnRequests.orderItem']);
 
         if (! $order->canBeReturned()) {
             return redirect()
@@ -40,7 +41,7 @@ class ReturnRequestController extends Controller
     public function store(Request $request, Order $order)
     {
         $this->authorizeOwnedOrder($order);
-        $order->loadMissing(['items.returnRequest']);
+        $order->loadMissing(['items.returnRequest', 'items.product.colors']);
 
         if (! $order->canBeReturned()) {
             return redirect()
@@ -48,15 +49,28 @@ class ReturnRequestController extends Controller
                 ->with('error', 'Đơn hàng chỉ được gửi yêu cầu trả trong vòng 7 ngày từ lúc giao thành công.');
         }
 
+        // Lấy sản phẩm được chọn trước để kiểm tra có biến thể không
+        $selectedItem = $order->items->firstWhere('id', (int) $request->input('order_item_id'));
+        $itemHasColors = $selectedItem?->product?->colors->isNotEmpty() ?? false;
+        $isExchange    = $request->input('request_type') === 'exchange';
+
         $validated = $request->validate([
-            'order_item_id' => ['required', 'integer'],
-            'request_type' => ['required', 'in:refund,exchange'],
-            'reason' => ['required', 'string', 'max:2000'],
-            'evidences' => ['nullable', 'array', 'max:5'],
+            'order_item_id'     => ['required', 'integer'],
+            'request_type'      => ['required', 'in:refund,exchange'],
+            'logistics_method'  => ['required', 'in:customer_ship,system_pickup'],
+            'reason'            => ['required', 'string', 'max:2000'],
+            // Chỉ bắt buộc khi: type=exchange VÀ sản phẩm có biến thể
+            'exchange_color_id' => Rule::when(
+                $isExchange && $itemHasColors,
+                ['required', 'integer', 'exists:product_colors,id'],
+                ['nullable']
+            ),
+            'evidences'   => ['nullable', 'array', 'max:5'],
             'evidences.*' => ['file', 'max:20480', 'mimes:jpg,jpeg,png,webp,mp4,mov,webm'],
         ], [
-            'evidences.*.mimes' => 'Minh chứng chỉ hỗ trợ file ảnh hoặc video phổ biến.',
-            'evidences.*.max' => 'Mỗi file minh chứng không được vượt quá 20MB.',
+            'exchange_color_id.required' => 'Vui lòng chọn biến thể (màu / size) muốn đổi sang.',
+            'evidences.*.mimes'          => 'Minh chứng chỉ hỗ trợ file ảnh hoặc video phổ biến.',
+            'evidences.*.max'            => 'Mỗi file minh chứng không được vượt quá 20MB.',
         ]);
 
         $orderItem = $order->items->firstWhere('id', (int) $validated['order_item_id']);
@@ -80,13 +94,15 @@ class ReturnRequestController extends Controller
 
         DB::transaction(function () use ($order, $orderItem, $validated, $evidencePaths) {
             $returnRequest = ReturnRequest::create([
-                'order_id' => $order->id,
-                'order_item_id' => $orderItem->id,
-                'user_id' => Auth::id(),
-                'request_type' => $validated['request_type'],
-                'status' => ReturnRequest::STATUS_PENDING,
-                'reason' => trim($validated['reason']),
-                'evidence_paths' => $evidencePaths,
+                'order_id'          => $order->id,
+                'order_item_id'     => $orderItem->id,
+                'user_id'           => Auth::id(),
+                'request_type'      => $validated['request_type'],
+                'exchange_color_id' => $validated['exchange_color_id'] ?? null,
+                'status'            => ReturnRequest::STATUS_PENDING,
+                'reason'            => trim($validated['reason']),
+                'logistics_method'  => $validated['logistics_method'],
+                'evidence_paths'    => $evidencePaths,
             ]);
 
             ReturnRequestStatusHistory::create([

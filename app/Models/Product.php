@@ -112,6 +112,11 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function colors()
+    {
+        return $this->hasMany(ProductColor::class)->orderBy('name');
+    }
+
     // Ảnh chính
     public function primaryImage()
     {
