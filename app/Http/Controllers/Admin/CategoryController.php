@@ -104,6 +104,12 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        if ($category->products()->count() > 0) {
+            return redirect()
+                ->route('admin.categories.index')
+                ->with('error', 'Danh mục có sản phẩm nên không xóa được.');
+        }
+
         $category->delete();
 
         return redirect()
