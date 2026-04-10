@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Database\Seeders\ProductColorSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -263,5 +264,8 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => $reviewedAt,
             ]);
         }
+
+        // Khởi tạo dữ liệu biến thể sản phẩm
+        $this->call(ProductColorSeeder::class);
     }
 }
