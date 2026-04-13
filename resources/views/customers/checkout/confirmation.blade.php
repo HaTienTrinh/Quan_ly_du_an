@@ -92,8 +92,8 @@
 
                             <div class="flex-1">
                                 <h3 class="font-semibold text-slate-900">{{ $item->product_name }}</h3>
-                                @if ($item->product_color_name)
-                                    <p class="text-slate-500 text-sm">Màu: {{ $item->product_color_name }}</p>
+                                @if ($item->product_size)
+                                    <p class="text-slate-500 text-sm">Size: <span class="font-semibold text-slate-700">{{ $item->product_size }}</span></p>
                                 @endif
                                 <p class="text-slate-500 text-sm">
                                     {{ number_format($item->unit_price, 0, ',', '.') }} ₫ x {{ $item->quantity }}

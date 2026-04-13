@@ -108,8 +108,8 @@
                                             </div>
                                             <div>
                                                 <div class="fw-semibold">{{ $item->product_name }}</div>
-                                                @if ($item->product_color_name)
-                                                    <div class="small text-muted">Màu máy: {{ $item->product_color_name }}</div>
+                                                @if ($item->product_size)
+                                                    <div class="small text-muted">Size: <strong>{{ $item->product_size }}</strong></div>
                                                 @endif
                                                 <div class="small text-muted">Mã sản phẩm: #{{ $item->product_id }}</div>
                                             </div>

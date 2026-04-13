@@ -2,129 +2,124 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductColor;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class ProductColorSeeder extends Seeder
 {
     public function run(): void
     {
-        // Lấy category đầu tiên
-        $category = \App\Models\Category::first();
+        $sizes = ['38', '39', '40', '41', '42', '43'];
 
-        if (! $category) {
-            $this->command->warn('Không có category. Hãy chạy DatabaseSeeder trước.');
-            return;
-        }
-
-        // Dữ liệu sản phẩm mẫu kèm biến thể
         $sampleProducts = [
             [
-                'name'  => 'Áo Thun Basic Unisex',
-                'price' => 199000,
-                'stock' => 50,
+                'brand'  => 'Nike',
+                'name'   => 'Nike Air Force 1 Low',
+                'price'  => 2490000,
+                'stock'  => 50,
                 'colors' => [
-                    ['name' => 'Trắng', 'size' => 'S',  'hex_code' => '#FFFFFF'],
-                    ['name' => 'Trắng', 'size' => 'M',  'hex_code' => '#FFFFFF'],
-                    ['name' => 'Trắng', 'size' => 'L',  'hex_code' => '#FFFFFF'],
-                    ['name' => 'Đen',   'size' => 'S',  'hex_code' => '#111111'],
-                    ['name' => 'Đen',   'size' => 'M',  'hex_code' => '#111111'],
-                    ['name' => 'Đen',   'size' => 'L',  'hex_code' => '#111111'],
-                    ['name' => 'Đen',   'size' => 'XL', 'hex_code' => '#111111'],
+                    ['name' => 'Trắng/Trắng', 'hex_code' => '#F8F8F8'],
+                    ['name' => 'Đen/Đen',     'hex_code' => '#111111'],
+                    ['name' => 'Trắng/Đen',   'hex_code' => '#E5E7EB'],
                 ],
             ],
             [
-                'name'  => 'Quần Jeans Slim Fit',
-                'price' => 450000,
-                'stock' => 30,
+                'brand'  => 'Nike',
+                'name'   => 'Nike Dunk Low',
+                'price'  => 2990000,
+                'stock'  => 40,
                 'colors' => [
-                    ['name' => 'Xanh nhạt', 'size' => '28', 'hex_code' => '#93C5FD'],
-                    ['name' => 'Xanh nhạt', 'size' => '29', 'hex_code' => '#93C5FD'],
-                    ['name' => 'Xanh nhạt', 'size' => '30', 'hex_code' => '#93C5FD'],
-                    ['name' => 'Xanh nhạt', 'size' => '31', 'hex_code' => '#93C5FD'],
-                    ['name' => 'Xanh đậm',  'size' => '28', 'hex_code' => '#1E40AF'],
-                    ['name' => 'Xanh đậm',  'size' => '29', 'hex_code' => '#1E40AF'],
-                    ['name' => 'Xanh đậm',  'size' => '30', 'hex_code' => '#1E40AF'],
-                    ['name' => 'Đen',       'size' => '29', 'hex_code' => '#111111'],
-                    ['name' => 'Đen',       'size' => '30', 'hex_code' => '#111111'],
-                    ['name' => 'Đen',       'size' => '31', 'hex_code' => '#111111'],
+                    ['name' => 'Pandas (Trắng/Đen)', 'hex_code' => '#F3F4F6'],
+                    ['name' => 'University Red',     'hex_code' => '#DC2626'],
+                    ['name' => 'Green Noise',        'hex_code' => '#4ADE80'],
                 ],
             ],
             [
-                'name'  => 'Giày Sneaker Classic',
-                'price' => 890000,
-                'stock' => 20,
+                'brand'  => 'Adidas',
+                'name'   => 'Adidas Samba OG',
+                'price'  => 2190000,
+                'stock'  => 45,
                 'colors' => [
-                    ['name' => 'Trắng/Đen', 'size' => '38', 'hex_code' => '#F3F4F6'],
-                    ['name' => 'Trắng/Đen', 'size' => '39', 'hex_code' => '#F3F4F6'],
-                    ['name' => 'Trắng/Đen', 'size' => '40', 'hex_code' => '#F3F4F6'],
-                    ['name' => 'Trắng/Đen', 'size' => '41', 'hex_code' => '#F3F4F6'],
-                    ['name' => 'Trắng/Đen', 'size' => '42', 'hex_code' => '#F3F4F6'],
-                    ['name' => 'Đen toàn bộ', 'size' => '38', 'hex_code' => '#111111'],
-                    ['name' => 'Đen toàn bộ', 'size' => '39', 'hex_code' => '#111111'],
-                    ['name' => 'Đen toàn bộ', 'size' => '40', 'hex_code' => '#111111'],
-                    ['name' => 'Đen toàn bộ', 'size' => '41', 'hex_code' => '#111111'],
+                    ['name' => 'Core Black/White', 'hex_code' => '#1C1C1C'],
+                    ['name' => 'Cloud White/Gum',  'hex_code' => '#FAFAFA'],
+                    ['name' => 'Wonder Clay',      'hex_code' => '#C4A882'],
                 ],
             ],
             [
-                'name'  => 'Áo Polo Nam',
-                'price' => 320000,
-                'stock' => 40,
+                'brand'  => 'Adidas',
+                'name'   => 'Adidas Stan Smith',
+                'price'  => 1890000,
+                'stock'  => 60,
                 'colors' => [
-                    ['name' => 'Xanh navy', 'size' => 'M',  'hex_code' => '#1E3A5F'],
-                    ['name' => 'Xanh navy', 'size' => 'L',  'hex_code' => '#1E3A5F'],
-                    ['name' => 'Xanh navy', 'size' => 'XL', 'hex_code' => '#1E3A5F'],
-                    ['name' => 'Đỏ',       'size' => 'M',  'hex_code' => '#EF4444'],
-                    ['name' => 'Đỏ',       'size' => 'L',  'hex_code' => '#EF4444'],
-                    ['name' => 'Xám',      'size' => 'M',  'hex_code' => '#9CA3AF'],
-                    ['name' => 'Xám',      'size' => 'L',  'hex_code' => '#9CA3AF'],
-                    ['name' => 'Xám',      'size' => 'XL', 'hex_code' => '#9CA3AF'],
+                    ['name' => 'Cloud White/Green', 'hex_code' => '#F0FDF4'],
+                    ['name' => 'Cloud White/Navy',  'hex_code' => '#EFF6FF'],
                 ],
             ],
             [
-                'name'  => 'Túi Tote Canvas',
-                'price' => 150000,
-                'stock' => 100,
-                // Sản phẩm chỉ có màu, không có size
+                'brand'  => 'Puma',
+                'name'   => 'Puma Suede Classic',
+                'price'  => 1390000,
+                'stock'  => 35,
                 'colors' => [
-                    ['name' => 'Be',    'size' => null, 'hex_code' => '#D4B896'],
-                    ['name' => 'Đen',  'size' => null, 'hex_code' => '#111111'],
-                    ['name' => 'Xanh',  'size' => null, 'hex_code' => '#3B82F6'],
-                    ['name' => 'Hồng', 'size' => null, 'hex_code' => '#EC4899'],
+                    ['name' => 'Puma Black',  'hex_code' => '#111111'],
+                    ['name' => 'Puma Navy',   'hex_code' => '#1E3A5F'],
+                    ['name' => 'Burnt Red',   'hex_code' => '#B91C1C'],
                 ],
             ],
             [
-                'name'  => 'Mũ Bucket Hat',
-                'price' => 120000,
-                'stock' => 60,
-                // Sản phẩm không có biến thể (test trường hợp này)
-                'colors' => [],
+                'brand'  => 'New Balance',
+                'name'   => 'New Balance 574 Core',
+                'price'  => 1590000,
+                'stock'  => 40,
+                'colors' => [
+                    ['name' => 'Grey/White',  'hex_code' => '#9CA3AF'],
+                    ['name' => 'Navy/White',  'hex_code' => '#1E40AF'],
+                    ['name' => 'Black/White', 'hex_code' => '#1F2937'],
+                ],
+            ],
+            [
+                'brand'  => 'Converse',
+                'name'   => 'Converse Chuck Taylor All Star High',
+                'price'  => 1190000,
+                'stock'  => 70,
+                'colors' => [
+                    ['name' => 'Optical White', 'hex_code' => '#F9FAFB'],
+                    ['name' => 'Black',         'hex_code' => '#111111'],
+                    ['name' => 'Navy',          'hex_code' => '#1E3A5F'],
+                    ['name' => 'Red',           'hex_code' => '#EF4444'],
+                ],
             ],
         ];
 
         foreach ($sampleProducts as $data) {
+            $category = Category::where('name', $data['brand'])->first();
+
             $product = Product::create([
-                'category_id' => $category->id,
+                'category_id' => $category?->id ?? 1,
                 'name'        => $data['name'],
-                'slug'        => \Illuminate\Support\Str::slug($data['name']) . '-' . rand(100, 999),
+                'slug'        => Str::slug($data['name']) . '-' . rand(100, 999),
                 'price'       => $data['price'],
                 'stock'       => $data['stock'],
                 'is_active'   => true,
-                'description' => 'Sản phẩm mẫu để test biến thể màu và size.',
+                'description' => "Giày {$data['name']} - thiết kế hiện đại, đế đệm êm ái, phù hợp cho cả thể thao lẫn đời thường.",
             ]);
 
-            foreach ($data['colors'] as $variant) {
-                ProductColor::create([
-                    'product_id' => $product->id,
-                    'name'       => $variant['name'],
-                    'size'       => $variant['size'],
-                    'hex_code'   => $variant['hex_code'],
-                ]);
+            foreach ($data['colors'] as $color) {
+                foreach ($sizes as $size) {
+                    ProductColor::create([
+                        'product_id' => $product->id,
+                        'name'       => $color['name'],
+                        'size'       => $size,
+                        'hex_code'   => $color['hex_code'],
+                    ]);
+                }
             }
 
-            $count = count($data['colors']);
-            $this->command->info("{$product->name}: " . ($count > 0 ? "{$count} biến thể" : 'không có biến thể'));
+            $variantCount = count($data['colors']) * count($sizes);
+            $this->command->info("{$product->name}: {$variantCount} biến thể (size 38–43)");
         }
     }
 }
