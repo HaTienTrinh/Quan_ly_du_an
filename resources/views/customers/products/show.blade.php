@@ -130,25 +130,31 @@
                     @auth
                         <form action="{{ route('cart.add') }}" method="POST" class="mb-8">
                             @csrf
-                            @if ($product->colors->isNotEmpty())
+                            @php
+                                $sizeGroups = $product->colors->filter(fn($c) => $c->size)->groupBy('size');
+                                $noSizeColors = $product->colors->filter(fn($c) => !$c->size);
+                            @endphp
+                            @if ($sizeGroups->isNotEmpty())
                                 <div class="mb-5">
-                                    <label class="mb-3 block font-semibold text-slate-700">Chọn biến thể (màu / size)</label>
-                                    <div class="grid gap-3 sm:grid-cols-2">
-                                        @foreach ($product->colors as $color)
+                                    <label class="mb-3 block font-semibold text-slate-700">Chọn size</label>
+                                    <div class="flex flex-wrap gap-3">
+                                        @foreach ($sizeGroups as $size => $colorsInSize)
                                             <label class="cursor-pointer">
-                                                <input type="radio" name="product_color_id" value="{{ $color->id }}"
+                                                <input type="radio" name="product_color_id"
+                                                    value="{{ $colorsInSize->first()->id }}"
                                                     class="peer sr-only"
-                                                    @checked((string) old('product_color_id') === (string) $color->id)>
-                                                <span
-                                                    class="flex items-center gap-3 rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:border-orange-300">
-                                                    <span class="h-5 w-5 rounded-full border border-slate-300 flex-shrink-0"
-                                                        style="background-color: {{ $color->hex_code ?: '#d1d5db' }};"></span>
-                                                    {{ $color->display_name }}
+                                                    @checked((string) old('product_color_id') === (string) $colorsInSize->first()->id)>
+                                                <span class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-500 peer-checked:text-white hover:border-orange-400">
+                                                    {{ $size }}
                                                 </span>
                                             </label>
                                         @endforeach
                                     </div>
                                 </div>
+                            @elseif ($noSizeColors->isNotEmpty())
+                                @foreach ($noSizeColors as $color)
+                                    <input type="hidden" name="product_color_id" value="{{ $color->id }}">
+                                @endforeach
                             @endif
 
                             <div class="mb-4 flex items-center gap-4">

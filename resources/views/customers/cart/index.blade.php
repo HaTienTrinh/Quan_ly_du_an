@@ -96,9 +96,9 @@
                                                     {{ $item['product_name'] }}
                                                 </h3>
 
-                                                @if (! empty($item['product_color_name']))
+                                                @if (! empty($item['product_size']))
                                                     <p class="mb-2 text-sm text-slate-500">
-                                                        Màu máy: {{ $item['product_color_name'] }}
+                                                        Size: <span class="font-semibold text-slate-700">{{ $item['product_size'] }}</span>
                                                     </p>
                                                 @endif
 

@@ -105,16 +105,17 @@ class OrderController extends Controller
 
             foreach ($cart as $item) {
                 OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'product_color_id' => $item['product_color_id'] ?? null,
-                    'product_name' => $item['product_name'],
-                    'product_color_name' => $item['product_color_name'] ?? null,
-                    'product_color_hex' => $item['product_color_hex'] ?? null,
-                    'product_thumbnail' => $item['product_thumbnail'],
-                    'unit_price' => $item['unit_price'],
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $item['subtotal'],
+                    'order_id'            => $order->id,
+                    'product_id'          => $item['product_id'],
+                    'product_color_id'    => $item['product_color_id'] ?? null,
+                    'product_name'        => $item['product_name'],
+                    'product_color_name'  => $item['product_color_name'] ?? null,
+                    'product_color_hex'   => $item['product_color_hex'] ?? null,
+                    'product_size'        => $item['product_size'] ?? null,
+                    'product_thumbnail'   => $item['product_thumbnail'],
+                    'unit_price'          => $item['unit_price'],
+                    'quantity'            => $item['quantity'],
+                    'subtotal'            => $item['subtotal'],
                 ]);
             }
 

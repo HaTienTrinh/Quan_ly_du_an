@@ -50,9 +50,9 @@ class CartController extends Controller
 
         $productColor = $this->resolveProductColor($product, $validated['product_color_id'] ?? null);
 
-        if ($product->colors->isNotEmpty() && ! $productColor) {
+        if ($product->colors->filter(fn($c) => $c->size)->isNotEmpty() && ! $productColor) {
             return back()->withErrors([
-                'product_color_id' => 'Vui lòng chọn màu máy trước khi thêm vào giỏ hàng.',
+                'product_color_id' => 'Vui lòng chọn size trước khi thêm vào giỏ hàng.',
             ])->withInput();
         }
 
@@ -70,15 +70,16 @@ class CartController extends Controller
             $cart[$itemKey]['quantity'] = $nextQuantity;
         } else {
             $cart[$itemKey] = [
-                'item_key' => $itemKey,
-                'product_id' => $product->id,
-                'product_name' => $product->name,
-                'product_color_id' => $productColor?->id,
+                'item_key'           => $itemKey,
+                'product_id'         => $product->id,
+                'product_name'       => $product->name,
+                'product_color_id'   => $productColor?->id,
                 'product_color_name' => $productColor?->name,
-                'product_color_hex' => $productColor?->hex_code,
-                'product_thumbnail' => $product->thumbnail,
-                'unit_price' => $product->price,
-                'quantity' => $quantity,
+                'product_color_hex'  => $productColor?->hex_code,
+                'product_size'       => $productColor?->size,
+                'product_thumbnail'  => $product->thumbnail,
+                'unit_price'         => $product->price,
+                'quantity'           => $quantity,
             ];
         }
 
