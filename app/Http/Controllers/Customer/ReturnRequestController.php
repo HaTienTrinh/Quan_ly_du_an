@@ -16,7 +16,7 @@ class ReturnRequestController extends Controller
     public function create(Order $order)
     {
         $this->authorizeOwnedOrder($order);
-        $order->loadMissing(['items.returnRequest', 'items.product.colors', 'returnRequests.orderItem']);
+        $order->loadMissing(['items.returnRequest', 'items.product.sizes', 'returnRequests.orderItem']);
 
         if (! $order->canBeReturned()) {
             return redirect()
@@ -41,7 +41,7 @@ class ReturnRequestController extends Controller
     public function store(Request $request, Order $order)
     {
         $this->authorizeOwnedOrder($order);
-        $order->loadMissing(['items.returnRequest', 'items.product.colors']);
+        $order->loadMissing(['items.returnRequest', 'items.product.sizes']);
 
         if (! $order->canBeReturned()) {
             return redirect()
@@ -51,24 +51,23 @@ class ReturnRequestController extends Controller
 
         // Lấy sản phẩm được chọn trước để kiểm tra có biến thể không
         $selectedItem = $order->items->firstWhere('id', (int) $request->input('order_item_id'));
-        $itemHasColors = $selectedItem?->product?->colors->isNotEmpty() ?? false;
-        $isExchange    = $request->input('request_type') === 'exchange';
+        $itemHasSizes = $selectedItem?->product?->sizes->isNotEmpty() ?? false;
+        $isExchange   = $request->input('request_type') === 'exchange';
 
         $validated = $request->validate([
             'order_item_id'     => ['required', 'integer'],
             'request_type'      => ['required', 'in:refund,exchange'],
             'logistics_method'  => ['required', 'in:customer_ship,system_pickup'],
             'reason'            => ['required', 'string', 'max:2000'],
-            // Chỉ bắt buộc khi: type=exchange VÀ sản phẩm có biến thể
             'exchange_color_id' => Rule::when(
-                $isExchange && $itemHasColors,
+                $isExchange && $itemHasSizes,
                 ['required', 'integer', 'exists:product_colors,id'],
                 ['nullable']
             ),
             'evidences'   => ['nullable', 'array', 'max:5'],
             'evidences.*' => ['file', 'max:20480', 'mimes:jpg,jpeg,png,webp,mp4,mov,webm'],
         ], [
-            'exchange_color_id.required' => 'Vui lòng chọn biến thể (màu / size) muốn đổi sang.',
+            'exchange_color_id.required' => 'Vui lòng chọn size muốn đổi sang.',
             'evidences.*.mimes'          => 'Minh chứng chỉ hỗ trợ file ảnh hoặc video phổ biến.',
             'evidences.*.max'            => 'Mỗi file minh chứng không được vượt quá 20MB.',
         ]);

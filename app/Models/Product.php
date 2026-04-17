@@ -112,9 +112,15 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    public function sizes()
+    {
+        return $this->hasMany(ProductSize::class)->orderBy('name');
+    }
+
+    // Alias giữ tương thích
     public function colors()
     {
-        return $this->hasMany(ProductColor::class)->orderBy('name');
+        return $this->sizes();
     }
 
     // Ảnh chính

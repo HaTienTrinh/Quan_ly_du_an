@@ -7,7 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Product;
-use App\Models\ProductColor;
+use App\Models\ProductSize;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -109,8 +109,7 @@ class OrderController extends Controller
                     'product_id' => $item['product_id'],
                     'product_color_id' => $item['product_color_id'] ?? null,
                     'product_name' => $item['product_name'],
-                    'product_color_name' => $item['product_color_name'] ?? null,
-                    'product_color_hex' => $item['product_color_hex'] ?? null,
+                    'product_size_name' => $item['product_size_name'] ?? null,
                     'product_thumbnail' => $item['product_thumbnail'],
                     'unit_price' => $item['unit_price'],
                     'quantity' => $item['quantity'],
@@ -150,7 +149,7 @@ class OrderController extends Controller
     public function confirmation(Order $order)
     {
         $this->authorizeOwnedOrder($order);
-        $order->loadMissing(['items.productColor']);
+        $order->loadMissing(['items.productSize']);
 
         return view('customers.checkout.confirmation', [
             'order' => $order,
@@ -266,10 +265,10 @@ class OrderController extends Controller
     {
         $this->authorizeOwnedOrder($order);
         $order->loadMissing([
-            'items.productColor',
+            'items.productSize',
             'items.returnRequest',
             'statusHistories.changedBy',
-            'returnRequests.orderItem.productColor',
+            'returnRequests.orderItem.productSize',
             'returnRequests.replacementOrder',
             'returnRequests.statusHistories.changedBy',
         ]);
@@ -369,7 +368,7 @@ class OrderController extends Controller
             return back()->with('error', 'Chỉ có thể mua lại từ các đơn hàng đã hủy.');
         }
 
-        $order->loadMissing(['items.productColor']);
+        $order->loadMissing(['items.productSize']);
 
         $productIds = $order->items
             ->pluck('product_id')
@@ -402,8 +401,8 @@ class OrderController extends Controller
                 continue;
             }
 
-            $productColor = $this->resolveProductColorForReorder($item);
-            $itemKey = $this->buildCartItemKey($product->id, $productColor?->id);
+            $productSize = $this->resolveProductSizeForReorder($item);
+            $itemKey = $this->buildCartItemKey($product->id, $productSize?->id);
 
             if (isset($cart[$itemKey])) {
                 $cart[$itemKey]['quantity'] += $quantity;
@@ -412,9 +411,8 @@ class OrderController extends Controller
                     'item_key' => $itemKey,
                     'product_id' => $product->id,
                     'product_name' => $product->name,
-                    'product_color_id' => $productColor?->id,
-                    'product_color_name' => $productColor?->name ?? $item->product_color_name,
-                    'product_color_hex' => $productColor?->hex_code ?? $item->product_color_hex,
+                    'product_color_id' => $productSize?->id,
+                    'product_size_name' => $productSize?->name ?? $item->product_size_name,
                     'product_thumbnail' => $product->thumbnail,
                     'unit_price' => $product->price,
                     'quantity' => $quantity,
@@ -481,24 +479,24 @@ class OrderController extends Controller
             ->all();
     }
 
-    private function resolveProductColorForReorder(OrderItem $item): ?ProductColor
+    private function resolveProductSizeForReorder(OrderItem $item): ?ProductSize
     {
-        if ($item->productColor) {
-            return $item->productColor;
+        if ($item->productSize) {
+            return $item->productSize;
         }
 
-        if (! $item->product_id || ! $item->product_color_name) {
+        if (! $item->product_id || ! $item->product_size_name) {
             return null;
         }
 
-        return ProductColor::query()
+        return ProductSize::query()
             ->where('product_id', $item->product_id)
-            ->where('name', $item->product_color_name)
+            ->where('name', $item->product_size_name)
             ->first();
     }
 
-    private function buildCartItemKey(int $productId, ?int $productColorId): string
+    private function buildCartItemKey(int $productId, ?int $productSizeId): string
     {
-        return $productId . '-' . ($productColorId ?? 0);
+        return $productId . '-' . ($productSizeId ?? 0);
     }
 }

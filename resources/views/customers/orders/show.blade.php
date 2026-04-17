@@ -187,9 +187,9 @@
 
                                     <div class="flex-1">
                                         <h3 class="font-semibold text-slate-900">{{ $item->product_name }}</h3>
-                                        @if ($item->product_color_name)
+                                        @if ($item->product_size_name)
                                             <p class="mt-1 text-sm text-slate-500">
-                                                Màu máy: {{ $item->product_color_name }}
+                                                Size: {{ $item->product_size_name }}
                                             </p>
                                         @endif
                                         <p class="mt-1 text-sm text-slate-500">

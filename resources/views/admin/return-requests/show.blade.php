@@ -25,8 +25,8 @@
             'completed' => 'bg-success text-white border border-success',
             'rejected' => 'bg-danger-subtle text-danger border border-danger-subtle',
         ];
-        $availableColors = $returnRequest->orderItem?->product?->colors ?? collect();
-        $selectedReplacementColorId = old('replacement_product_color_id', $returnRequest->orderItem?->product_color_id);
+        $availableSizes = $returnRequest->orderItem?->product?->sizes ?? collect();
+        $selectedReplacementSizeId = old('replacement_product_color_id', $returnRequest->orderItem?->product_color_id);
     @endphp
 
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-4">
@@ -77,8 +77,8 @@
                     <dt class="col-sm-4 text-muted small">Sản phẩm</dt>
                     <dd class="col-sm-8">{{ $returnRequest->orderItem->product_name }}</dd>
 
-                    <dt class="col-sm-4 text-muted small">Màu khách đã mua</dt>
-                    <dd class="col-sm-8">{{ $returnRequest->orderItem->product_color_name ?: 'Không phân màu' }}</dd>
+                    <dt class="col-sm-4 text-muted small">Size khách đã mua</dt>
+                    <dd class="col-sm-8">{{ $returnRequest->orderItem->product_size_name ?: 'Không có size' }}</dd>
 
                     <dt class="col-sm-4 text-muted small">Lý do</dt>
                     <dd class="col-sm-8">{{ $returnRequest->reason }}</dd>
@@ -87,14 +87,10 @@
                     <dd class="col-sm-8">{{ $returnRequest->request_type_label }}</dd>
 
                     @if ($returnRequest->request_type === \App\Models\ReturnRequest::TYPE_EXCHANGE)
-                        <dt class="col-sm-4 text-muted small">Màu/size muốn đổi</dt>
+                        <dt class="col-sm-4 text-muted small">Size muốn đổi</dt>
                         <dd class="col-sm-8">
-                            @if ($returnRequest->exchangeColor)
-                                @if ($returnRequest->exchangeColor->hex_code)
-                                    <span class="d-inline-block rounded-circle border me-1"
-                                        style="width:14px;height:14px;background:{{ $returnRequest->exchangeColor->hex_code }};vertical-align:middle"></span>
-                                @endif
-                                <strong>{{ $returnRequest->exchangeColor->display_name }}</strong>
+                            @if ($returnRequest->exchangeSize)
+                                <strong>{{ $returnRequest->exchangeSize->name }}</strong>
                             @else
                                 <span class="text-muted">Khách chưa chọn</span>
                             @endif
@@ -385,27 +381,27 @@
                             </div>
                         @endif
 
-                        {{-- Màu/size gửi lại: chỉ hiện khi type = exchange --}}
+                        {{-- Size gửi lại: chỉ hiện khi type = exchange --}}
                         @if ($returnRequest->request_type === \App\Models\ReturnRequest::TYPE_EXCHANGE)
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">
-                                    Màu / size gửi lại cho khách
+                                    Size gửi lại cho khách
                                     <span class="text-muted fw-normal small">— chỉ áp dụng khi hợp lệ</span>
                                 </label>
                                 <select name="replacement_color_id" id="replacementColorSelect"
                                     class="form-select @error('replacement_color_id') is-invalid @enderror">
-                                    <option value="">-- Chọn biến thể --</option>
-                                    @foreach ($returnRequest->orderItem->product->colors as $color)
-                                        <option value="{{ $color->id }}"
-                                            @selected((int) old('replacement_color_id', $returnRequest->exchangeColor?->id) === $color->id)>
-                                            {{ $color->display_name }}
+                                    <option value="">-- Chọn size --</option>
+                                    @foreach ($returnRequest->orderItem->product->sizes as $size)
+                                        <option value="{{ $size->id }}"
+                                            @selected((int) old('replacement_color_id', $returnRequest->exchangeSize?->id) === $size->id)>
+                                            {{ $size->name }}
                                         </option>
                                     @endforeach
                                 </select>
                                 @error('replacement_color_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text">Khách muốn đổi sang: <strong>{{ $returnRequest->exchangeColor?->display_name ?? 'Chưa chọn' }}</strong></div>
+                                <div class="form-text">Khách muốn đổi sang: <strong>{{ $returnRequest->exchangeSize?->name ?? 'Chưa chọn' }}</strong></div>
                             </div>
                         @endif
 
@@ -474,16 +470,16 @@
                         @if (
                             $returnRequest->request_type === \App\Models\ReturnRequest::TYPE_EXCHANGE
                             && ! $returnRequest->replacementOrder
-                            && $availableColors->isNotEmpty()
+                            && $availableSizes->isNotEmpty()
                         )
                             <div class="mb-3">
-                                <label for="replacement_product_color_id" class="form-label">Màu máy gửi lại cho khách</label>
+                                <label for="replacement_product_color_id" class="form-label">Size gửi lại cho khách</label>
                                 <select name="replacement_product_color_id" id="replacement_product_color_id"
                                     class="form-select @error('replacement_product_color_id') is-invalid @enderror" required>
-                                    <option value="">Chọn màu máy</option>
-                                    @foreach ($availableColors as $color)
-                                        <option value="{{ $color->id }}" @selected((string) $selectedReplacementColorId === (string) $color->id)>
-                                            {{ $color->name }}
+                                    <option value="">Chọn size</option>
+                                    @foreach ($availableSizes as $size)
+                                        <option value="{{ $size->id }}" @selected((string) $selectedReplacementSizeId === (string) $size->id)>
+                                            {{ $size->name }}
                                         </option>
                                     @endforeach
                                 </select>

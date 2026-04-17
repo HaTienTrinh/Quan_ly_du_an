@@ -139,7 +139,7 @@
                                     <span class="ml-3 text-slate-700">Thanh toán khi nhận hàng</span>
                                 </label>
 
-                                <label class="flex cursor-pointer items-center rounded-lg border p-4 hover:border-orange-500">
+                                {{-- <label class="flex cursor-pointer items-center rounded-lg border p-4 hover:border-orange-500">
                                     <input type="radio" name="payment_method" value="credit_card" class="accent-orange-500"
                                         {{ old('payment_method') == 'credit_card' ? 'checked' : '' }}>
                                     <span class="ml-3 text-slate-700">Thẻ tín dụng</span>
@@ -149,7 +149,7 @@
                                     <input type="radio" name="payment_method" value="bank_transfer" class="accent-orange-500"
                                         {{ old('payment_method') == 'bank_transfer' ? 'checked' : '' }}>
                                     <span class="ml-3 text-slate-700">Chuyển khoản</span>
-                                </label>
+                                </label> --}}
                             </div>
                         </div>
 
@@ -181,8 +181,8 @@
                             <div class="mb-3 flex justify-between text-sm">
                                 <div>
                                     <p class="font-medium text-slate-800">{{ $item['product_name'] }}</p>
-                                    @if (! empty($item['product_color_name']))
-                                        <p class="text-slate-500">Màu: {{ $item['product_color_name'] }}</p>
+                                    @if (! empty($item['product_size_name']))
+                                        <p class="text-slate-500">Size: {{ $item['product_size_name'] }}</p>
                                     @endif
                                     <p class="text-slate-500">x{{ $item['quantity'] }}</p>
                                 </div>

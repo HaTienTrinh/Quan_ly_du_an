@@ -7,7 +7,7 @@ use App\Models\Inspection;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
-use App\Models\ProductColor;
+use App\Models\ProductSize;
 use App\Models\Refund;
 use App\Models\Reship;
 use App\Models\ReturnRequest;
@@ -235,7 +235,6 @@ class ReturnRequestController extends Controller
                           && $returnRequest->request_type === ReturnRequest::TYPE_REFUND
                 ),
             ],
-            // Màu/size gửi lại — chỉ bắt buộc khi hợp lệ + exchange
             'replacement_color_id' => [
                 'nullable', 'integer',
                 Rule::requiredIf(
@@ -311,9 +310,9 @@ class ReturnRequestController extends Controller
 
             } else {
                 // ===== HỢP LỆ + EXCHANGE: tạo đơn gửi hàng đổi với màu/size khách chọn =====
-                $newColor = ProductColor::find($validated['replacement_color_id']);
+                $newSize = ProductSize::find($validated['replacement_color_id']);
 
-                $replacementOrder = $this->createReplacementOrder($returnRequest, $newColor, 'exchange');
+                $replacementOrder = $this->createReplacementOrder($returnRequest, $newSize, 'exchange');
 
                 $returnRequest->update([
                     'status'               => ReturnRequest::STATUS_EXCHANGED,
@@ -327,7 +326,7 @@ class ReturnRequestController extends Controller
                     'changed_by'        => Auth::id(),
                     'from_status'       => $fromStatus,
                     'to_status'         => ReturnRequest::STATUS_EXCHANGED,
-                    'note'              => 'Hàng hợp lệ. Tạo đơn #' . $replacementOrder->order_code . ' gửi hàng đổi (' . $newColor->display_name . ') cho khách.',
+                    'note'              => 'Hàng hợp lệ. Tạo đơn #' . $replacementOrder->order_code . ' gửi hàng đổi (' . $newSize->name . ') cho khách.',
                 ]);
             }
         });
@@ -432,7 +431,7 @@ class ReturnRequestController extends Controller
             if ($returnRequest->request_type === ReturnRequest::TYPE_EXCHANGE && ! $returnRequest->replacement_order_id) {
                 $replacementOrder = $this->createReplacementOrder(
                     $returnRequest,
-                    $this->resolveReplacementColor($returnRequest, $validated['replacement_product_color_id'] ?? null)
+                    $this->resolveReplacementSize($returnRequest, $validated['replacement_product_color_id'] ?? null)
                 );
 
                 $returnRequest->update([
@@ -455,9 +454,9 @@ class ReturnRequestController extends Controller
         $returnRequest->load([
             'user',
             'order.user',
-            'orderItem.product.colors',
-            'orderItem.productColor',
-            'exchangeColor',           // màu/size khách muốn đổi sang
+            'orderItem.product.sizes',
+            'orderItem.productSize',
+            'exchangeSize',
             'replacementOrder',
             'statusHistories.changedBy',
             'inspection',
@@ -491,8 +490,8 @@ class ReturnRequestController extends Controller
 
     private function createReplacementOrder(
         ReturnRequest $returnRequest,
-        ?ProductColor $newColor,
-        string $reason  // 'fraud' | 'refund' | 'exchange'
+        ?ProductSize $newSize,
+        string $reason
     ): Order {
         $sourceOrder = $returnRequest->order;
         $sourceItem  = $returnRequest->orderItem;
@@ -530,20 +529,14 @@ class ReturnRequestController extends Controller
             'confirmed_at'           => $orderStatus === Order::STATUS_CONFIRMED ? now() : null,
         ]);
 
-        // Màu/size của item trong đơn mới:
-        //   fraud   → giữ nguyên màu/size cũ
-        //   refund  → giữ nguyên (chỉ ghi nhận)
-        //   exchange → dùng màu/size khách chọn ($newColor)
-        $colorToUse = ($reason === 'exchange' && $newColor) ? $newColor : $sourceItem->productColor;
+        $sizeToUse = ($reason === 'exchange' && $newSize) ? $newSize : $sourceItem->productSize;
 
         OrderItem::create([
             'order_id'           => $replacementOrder->id,
             'product_id'         => $sourceItem->product_id,
-            'product_color_id'   => $colorToUse?->id,
+            'product_color_id'   => $sizeToUse?->id,
             'product_name'       => $sourceItem->product_name,
-            'product_color_name' => $colorToUse?->name ?? $sourceItem->product_color_name,
-            'product_color_hex'  => $colorToUse?->hex_code ?? $sourceItem->product_color_hex,
-            'product_size'       => $colorToUse?->size ?? $sourceItem->product_size,
+            'product_size_name'  => $sizeToUse?->name ?? $sourceItem->product_size_name,
             'product_thumbnail'  => $sourceItem->product_thumbnail,
             'unit_price'         => $sourceItem->unit_price,
             'quantity'           => $sourceItem->quantity,

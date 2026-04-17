@@ -53,7 +53,7 @@ class ReturnRequest extends Model
         'order_item_id',
         'user_id',
         'replacement_order_id',
-        'exchange_color_id',    // Biến thể (màu+size) khách muốn đổi sang
+        'exchange_color_id',    // Size khách muốn đổi sang
         'request_type',
         'status',
         'reason',
@@ -187,10 +187,16 @@ class ReturnRequest extends Model
         return $this->belongsTo(Order::class, 'replacement_order_id');
     }
 
-    // Biến thể (màu + size) khách muốn đổi sang
+    // Size khách muốn đổi sang
+    public function exchangeSize()
+    {
+        return $this->belongsTo(ProductSize::class, 'exchange_color_id');
+    }
+
+    // Alias giữ tương thích
     public function exchangeColor()
     {
-        return $this->belongsTo(ProductColor::class, 'exchange_color_id');
+        return $this->exchangeSize();
     }
 
     public function statusHistories()

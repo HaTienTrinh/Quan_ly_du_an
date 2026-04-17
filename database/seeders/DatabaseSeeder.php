@@ -36,11 +36,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $categories = [
-            'Running - Giày chạy bộ',
-            'Streetwear - Giày đường phố',
-            'Classic - Giày cổ điển',
-            'Basketball - Giày bóng rổ',
-            'Casual - Giày thoải mái',
+            'Nike',
+            'Adidas',
+            'Puma',
+            'New Balance',
+            'Converse',
         ];
 
         foreach ($categories as $name) {
@@ -52,6 +52,18 @@ class DatabaseSeeder extends Seeder
         }
 
         Product::factory()->count(20)->create();
+
+        $sizes = ['38', '39', '40', '41', '42', '43'];
+        Product::all()->each(function ($product) use ($sizes) {
+            foreach ($sizes as $size) {
+                \App\Models\ProductColor::create([
+                    'product_id' => $product->id,
+                    'name'       => 'Mặc định',
+                    'size'       => $size,
+                    'hex_code'   => null,
+                ]);
+            }
+        });
 
         $featuredProductIds = Product::query()
             ->orderBy('id')
@@ -87,8 +99,7 @@ class DatabaseSeeder extends Seeder
                 'receiver_phone' => '0901234567',
                 'created_at' => now()->subDays(4),
                 'items' => [
-                    ['index' => 0, 'quantity' => 1],
-                    ['index' => 1, 'quantity' => 2],
+                    ['index' => 0, 'quantity' => 1],['index' => 1, 'quantity' => 2],
                 ],
             ],
             [
@@ -141,11 +152,15 @@ class DatabaseSeeder extends Seeder
                 $lineSubtotal = $unitPrice * $quantity;
                 $subtotal += $lineSubtotal;
 
+                $color = $product->colors()->where('size', '40')->first()
+                    ?? $product->colors()->first();
+
                 $preparedItems[] = [
-                    'product' => $product,
-                    'unit_price' => $unitPrice,
-                    'quantity' => $quantity,
-                    'subtotal' => $lineSubtotal,
+                    'product'      => $product,
+                    'color'        => $color,
+                    'unit_price'   => $unitPrice,
+                    'quantity'     => $quantity,
+                    'subtotal'     => $lineSubtotal,
                 ];
             }
 
@@ -157,8 +172,7 @@ class DatabaseSeeder extends Seeder
             ], true);
 
             $order = Order::create([
-                'order_code' => $sampleOrder['order_code'],
-                'user_id' => $customer->id,
+                'order_code' => $sampleOrder['order_code'],'user_id' => $customer->id,
                 'receiver_name' => $sampleOrder['receiver_name'],
                 'receiver_phone' => $sampleOrder['receiver_phone'],
                 'receiver_province' => 'Hồ Chí Minh',
@@ -182,13 +196,17 @@ class DatabaseSeeder extends Seeder
 
             foreach ($preparedItems as $preparedItem) {
                 OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $preparedItem['product']->id,
-                    'product_name' => $preparedItem['product']->name,
-                    'product_thumbnail' => $preparedItem['product']->thumbnail,
-                    'unit_price' => $preparedItem['unit_price'],
-                    'quantity' => $preparedItem['quantity'],
-                    'subtotal' => $preparedItem['subtotal'],
+                    'order_id'           => $order->id,
+                    'product_id'         => $preparedItem['product']->id,
+                    'product_color_id'   => $preparedItem['color']?->id,
+                    'product_name'       => $preparedItem['product']->name,
+                    'product_color_name' => $preparedItem['color']?->name,
+                    'product_color_hex'  => $preparedItem['color']?->hex_code,
+                    'product_size'       => $preparedItem['color']?->size,
+                    'product_thumbnail'  => $preparedItem['product']->thumbnail,
+                    'unit_price'         => $preparedItem['unit_price'],
+                    'quantity'           => $preparedItem['quantity'],
+                    'subtotal'           => $preparedItem['subtotal'],
                 ]);
             }
 
@@ -210,8 +228,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'minhanh@example.com',
                 'password' => Hash::make('password'),
                 'role' => 'customer',
-                'phone' => '0945678901',
-                'is_active' => true,
+                'phone' => '0945678901','is_active' => true,
             ]),
             User::create([
                 'name' => 'Hai Nam',
