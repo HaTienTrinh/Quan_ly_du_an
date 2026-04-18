@@ -383,6 +383,11 @@
 
                         {{-- Size gửi lại: chỉ hiện khi type = exchange --}}
                         @if ($returnRequest->request_type === \App\Models\ReturnRequest::TYPE_EXCHANGE)
+                            @php
+                                $sizeOptions = $returnRequest->orderItem->product->colors
+                                    ->filter(fn($c) => $c->size)
+                                    ->groupBy('size');
+                            @endphp
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">
                                     Size gửi lại cho khách
@@ -472,6 +477,9 @@
                             && ! $returnRequest->replacementOrder
                             && $availableSizes->isNotEmpty()
                         )
+                            @php
+                                $availableSizes = $availableColors->filter(fn($c) => $c->size)->groupBy('size');
+                            @endphp
                             <div class="mb-3">
                                 <label for="replacement_product_color_id" class="form-label">Size gửi lại cho khách</label>
                                 <select name="replacement_product_color_id" id="replacement_product_color_id"

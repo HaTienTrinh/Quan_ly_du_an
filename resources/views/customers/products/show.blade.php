@@ -150,6 +150,10 @@
                                         @endforeach
                                     </div>
                                 </div>
+                            @elseif ($noSizeColors->isNotEmpty())
+                                @foreach ($noSizeColors as $color)
+                                    <input type="hidden" name="product_color_id" value="{{ $color->id }}">
+                                @endforeach
                             @endif
 
                             <div class="mb-4 flex items-center gap-4">
