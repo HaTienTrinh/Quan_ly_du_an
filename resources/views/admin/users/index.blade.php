@@ -43,9 +43,9 @@
                 </div>
             @endif
         </form>
-        <a href="{{ route('admin.users.trashed') }}" class="btn btn-outline-secondary align-self-start align-self-md-center">
+        {{-- <a href="{{ route('admin.users.trashed') }}" class="btn btn-outline-secondary align-self-start align-self-md-center">
             <i class="bi bi-trash3 me-1"></i> Đã xóa
-        </a>
+        </a> --}}
     </div>
 
     <div class="stat-card overflow-hidden">
@@ -102,7 +102,7 @@
                                     <a href="{{ route('admin.users.edit', $u) }}" class="btn btn-sm btn-outline-secondary" title="Sửa">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    @if($u->id !== auth()->id())
+                                    {{-- @if($u->id !== auth()->id())
                                         <form action="{{ route('admin.users.destroy', $u) }}" method="post" class="d-inline"
                                               onsubmit="return confirm('Chuyển tài khoản «{{ $u->name }}» vào thùng rác?');">
                                             @csrf
@@ -111,7 +111,7 @@
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
-                                    @endif
+                                    @endif --}}
                                 </div>
                             </td>
                         </tr>

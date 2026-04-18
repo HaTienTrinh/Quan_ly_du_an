@@ -58,10 +58,11 @@
                 </div>
 
                 <div class="col-12 col-md-4">
-                    <label for="stock" class="form-label fw-medium">Tồn kho <span class="text-danger">*</span></label>
+                    <label for="stock" class="form-label fw-medium">Tồn kho</label>
                     <input type="number" name="stock" id="stock" value="{{ old('stock', $product->stock) }}"
-                           class="form-control @error('stock') is-invalid @enderror" required min="0">
-                    @error('stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                           class="form-control bg-light" readonly
+                           title="Tự động tính tổng từ số lượng các size">
+                    <div class="form-text">Tự động cập nhật theo tổng số lượng các size.</div>
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -82,9 +83,9 @@
                 </div>
 
                 @php
-                    $oldSizes = old('sizes', $product->sizes->map(fn ($s) => ['name' => $s->name])->all());
+                    $oldSizes = old('sizes', $product->sizes->map(fn ($s) => ['name' => $s->name, 'stock' => $s->stock])->all());
                     if ($oldSizes === []) {
-                        $oldSizes = [['name' => '']];
+                        $oldSizes = [['name' => '', 'stock' => 0]];
                     }
                 @endphp
 
@@ -97,15 +98,25 @@
                             </div>
                             <button type="button" class="btn btn-sm btn-outline-primary" id="add-size-row">Thêm size</button>
                         </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-7"><small class="text-muted fw-semibold">Tên size</small></div>
+                            <div class="col-md-3"><small class="text-muted fw-semibold">Số lượng</small></div>
+                        </div>
 
                         <div id="size-rows" class="d-flex flex-column gap-2">
                             @foreach ($oldSizes as $index => $size)
                                 <div class="row g-2 align-items-center size-row">
-                                    <div class="col-md-10">
+                                    <div class="col-md-7">
                                         <input type="text" name="sizes[{{ $index }}][name]"
                                             value="{{ $size['name'] ?? '' }}"
                                             class="form-control @error('sizes.' . $index . '.name') is-invalid @enderror"
                                             placeholder="Tên size, ví dụ: S, M, L, XL, 38, 39...">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="number" name="sizes[{{ $index }}][stock]"
+                                            value="{{ $size['stock'] ?? 0 }}"
+                                            class="form-control @error('sizes.' . $index . '.stock') is-invalid @enderror"
+                                            placeholder="Số lượng" min="0">
                                     </div>
                                     <div class="col-md-2">
                                         <button type="button" class="btn btn-outline-danger w-100 remove-size-row">Xóa</button>
@@ -135,8 +146,11 @@
 
     <template id="size-row-template">
         <div class="row g-2 align-items-center size-row">
-            <div class="col-md-10">
+            <div class="col-md-7">
                 <input type="text" data-field="name" class="form-control" placeholder="Tên size, ví dụ: S, M, L, XL, 38, 39...">
+            </div>
+            <div class="col-md-3">
+                <input type="number" data-field="stock" value="0" class="form-control" placeholder="Số lượng" min="0">
             </div>
             <div class="col-md-2">
                 <button type="button" class="btn btn-outline-danger w-100 remove-size-row">Xóa</button>
@@ -149,10 +163,20 @@
             const rowsContainer = document.getElementById('size-rows');
             const template = document.getElementById('size-row-template');
             const addButton = document.getElementById('add-size-row');
+            const stockInput = document.getElementById('stock');
+
+            function calcTotalStock() {
+                let total = 0;
+                rowsContainer.querySelectorAll('input[type="number"]').forEach(input => {
+                    total += parseInt(input.value) || 0;
+                });
+                stockInput.value = total;
+            }
 
             function reindexRows() {
                 Array.from(rowsContainer.querySelectorAll('.size-row')).forEach((row, index) => {
                     row.querySelector('input[type="text"]').setAttribute('name', `sizes[${index}][name]`);
+                    row.querySelector('input[type="number"]').setAttribute('name', `sizes[${index}][stock]`);
                 });
             }
 
@@ -160,6 +184,7 @@
                 const fragment = template.content.cloneNode(true);
                 rowsContainer.appendChild(fragment);
                 reindexRows();
+                calcTotalStock();
             });
 
             rowsContainer.addEventListener('click', function (event) {
@@ -169,14 +194,22 @@
 
                 if (rows.length === 1) {
                     rows[0].querySelector('input[type="text"]').value = '';
+                    rows[0].querySelector('input[type="number"]').value = 0;
+                    calcTotalStock();
                     return;
                 }
 
                 event.target.closest('.size-row')?.remove();
                 reindexRows();
+                calcTotalStock();
+            });
+
+            rowsContainer.addEventListener('input', function (event) {
+                if (event.target.type === 'number') calcTotalStock();
             });
 
             reindexRows();
+            calcTotalStock();
         });
     </script>
 @endsection

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\ContactController as AdminContactController;
+use App\Http\Controllers\Admin\DevController;
 use App\Http\Controllers\Admin\AdminInspectionController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -11,6 +13,8 @@ use App\Http\Controllers\Admin\ReturnRequestController as AdminReturnRequestCont
 use App\Http\Controllers\Admin\ReshipController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Customer\CheckoutController;
+use App\Http\Controllers\Customer\ContactController;
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\HomeController;
 use App\Http\Controllers\Customer\OrderController;
@@ -24,6 +28,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [HomeController::class, 'product'])->name('products');
 Route::get('/products/{product}', [HomeController::class, 'show'])->name('products.show');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/posts', [HomeController::class, 'post'])->name('posts');
 Route::get('/posts/{slug}', [HomeController::class, 'postShow'])->name('posts.show');
 
@@ -44,6 +49,16 @@ Route::prefix('admin')
     ->middleware(['auth', 'admin'])
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        // ===== DEV TOOLS =====
+        Route::get('dev', [DevController::class, 'index'])->name('dev.index');
+        Route::patch('dev/fake-delivered/{order}', [DevController::class, 'fakeDeliveredAt'])->name('dev.fake-delivered');
+
+        // ===== CONTACTS =====
+        Route::get('contacts', [AdminContactController::class, 'index'])->name('contacts.index');
+        Route::get('contacts/{contact}', [AdminContactController::class, 'show'])->name('contacts.show');
+        Route::post('contacts/{contact}/reply', [AdminContactController::class, 'reply'])->name('contacts.reply');
+        Route::delete('contacts/{contact}', [AdminContactController::class, 'destroy'])->name('contacts.destroy');
 
         Route::get('categories/trashed', [CategoryController::class, 'trashed'])->name('categories.trashed');
         Route::patch('categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
@@ -99,7 +114,12 @@ Route::prefix('admin')
         Route::patch('reships/{reship}', [ReshipController::class, 'update'])->name('reships.update');
     });
 
+// VNPay return callback (không cần auth vì VNPay gọi từ bên ngoài)
+Route::get('/vnpay/return', [CheckoutController::class, 'vnpayReturn'])->name('checkout.vnpay.return');
+
 Route::middleware(['auth', 'customer'])->group(function () {
+    Route::get('/my-contacts', [ContactController::class, 'myContacts'])->name('contacts.my');
+
     Route::prefix('cart')
         ->name('cart.')
         ->group(function () {
@@ -119,10 +139,11 @@ Route::middleware(['auth', 'customer'])->group(function () {
 
     Route::post('/products/{product}/reviews', [ProductReviewController::class, 'store'])->name('products.reviews.store');
     Route::post('/posts/{slug}/comments', [PostCommentController::class, 'store'])->name('posts.comments.store');
-    Route::get('/checkout', [OrderController::class, 'checkout'])->name('checkout');
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/orders', [CheckoutController::class, 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}/confirmation', [OrderController::class, 'confirmation'])->name('orders.confirmation');
+    Route::get('/orders/{order}/confirmation', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
+    Route::get('/orders/{order}/vnpay', [CheckoutController::class, 'payVnpay'])->name('checkout.vnpay');
     Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::patch('/orders/{order}/receive', [OrderController::class, 'receive'])->name('orders.receive');
     Route::get('/orders/{order}/returns/create', [ReturnRequestController::class, 'create'])->name('orders.returns.create');

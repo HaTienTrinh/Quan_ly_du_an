@@ -68,7 +68,7 @@
                         <i class="bi bi-pencil me-1"></i> Sửa tài khoản
                     </a>
                     <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">Danh sách</a>
-                    @if($user->id !== auth()->id())
+                    {{-- @if($user->id !== auth()->id())
                         <form action="{{ route('admin.users.destroy', $user) }}" method="post" class="d-inline"
                               onsubmit="return confirm('Chuyển tài khoản này vào thùng rác?');">
                             @csrf
@@ -77,7 +77,7 @@
                                 <i class="bi bi-trash me-1"></i> Xóa mềm
                             </button>
                         </form>
-                    @endif
+                    @endif --}}
                 </div>
             </div>
         </div>

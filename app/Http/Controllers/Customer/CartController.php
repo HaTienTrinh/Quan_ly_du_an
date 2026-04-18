@@ -62,8 +62,11 @@ class CartController extends Controller
         $currentQuantity = (int) ($cart[$itemKey]['quantity'] ?? 0);
         $nextQuantity = $currentQuantity + $quantity;
 
-        if ($nextQuantity > $product->stock) {
-            return back()->with('error', 'Số lượng vượt quá tồn kho hiện có của sản phẩm.');
+        // Kiểm tra stock theo size (nếu có chọn size) hoặc stock sản phẩm
+        $availableStock = $productSize ? $productSize->stock : $product->stock;
+
+        if ($nextQuantity > $availableStock) {
+            return back()->with('error', 'Số lượng vượt quá tồn kho hiện có của size này.');
         }
 
         if (isset($cart[$itemKey])) {
@@ -99,10 +102,18 @@ class CartController extends Controller
         if ($quantity <= 0) {
             unset($cart[$productId]);
         } elseif (isset($cart[$productId])) {
-            $product = Product::find($cart[$productId]['product_id']);
+            $sizeId = $cart[$productId]['product_color_id'] ?? null;
+            $availableStock = $product->stock;
 
-            if ($product && $quantity > $product->stock) {
-                return back()->with('error', 'Số lượng vượt quá tồn kho hiện có của sản phẩm.');
+            if ($sizeId) {
+                $size = ProductSize::find($sizeId);
+                if ($size) {
+                    $availableStock = $size->stock;
+                }
+            }
+
+            if ($quantity > $availableStock) {
+                return back()->with('error', 'Số lượng vượt quá tồn kho hiện có của size này.');
             }
 
             $cart[$productId]['quantity'] = $quantity;

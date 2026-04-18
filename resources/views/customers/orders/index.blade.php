@@ -190,6 +190,20 @@
                                     </a>
                                 @endif
 
+                                @php
+                                    $deliveredAt = $order->getDeliveredAt();
+                                    $canReview = $order->status === 'delivered'
+                                        && $deliveredAt !== null
+                                        && now()->diffInDays($deliveredAt) <= 7;
+                                @endphp
+
+                                @if ($canReview)
+                                    <a href="{{ route('orders.show', $order) }}#items"
+                                        class="inline-flex items-center rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-600 transition hover:bg-orange-100">
+                                         Đánh giá sản phẩm
+                                    </a>
+                                @endif
+
                                 @if ($order->status === \App\Models\Order::STATUS_CANCELLED)
                                     <form action="{{ route('orders.reorder', $order) }}" method="POST">
                                         @csrf

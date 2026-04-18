@@ -57,6 +57,7 @@
                                 @foreach ($product->sizes as $size)
                                     <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
                                         {{ $size->name }}
+                                        <span class="ms-1 text-muted">({{ number_format($size->stock) }})</span>
                                     </span>
                                 @endforeach
                             </div>

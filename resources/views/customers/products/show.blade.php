@@ -140,8 +140,11 @@
                                                     class="peer sr-only"
                                                     @checked((string) old('product_size_id') === (string) $size->id)>
                                                 <span
-                                                    class="flex items-center gap-3 rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:border-orange-300">
-                                                    {{ $size->name }}
+                                                    class="flex items-center justify-between rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:border-orange-300">
+                                                    <span>{{ $size->name }}</span>
+                                                    <span class="text-xs {{ $size->stock > 0 ? 'text-slate-400' : 'text-red-400' }}">
+                                                        {{ $size->stock > 0 ? 'Còn '.$size->stock : 'Hết hàng' }}
+                                                    </span>
                                                 </span>
                                             </label>
                                         @endforeach

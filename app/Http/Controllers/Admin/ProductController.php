@@ -51,10 +51,11 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'price'       => ['required', 'numeric', 'min:0'],
             'sale_price'  => ['nullable', 'numeric', 'min:0', 'lte:price'],
-            'stock'       => ['required', 'integer', 'min:0'],
+            'stock'       => ['nullable', 'integer', 'min:0'],
             'thumbnail'   => ['nullable', 'image', 'max:4096'],
-            'sizes'       => ['nullable', 'array'],
-            'sizes.*.name' => ['nullable', 'string', 'max:255'],
+            'sizes'        => ['nullable', 'array'],
+            'sizes.*.name'  => ['nullable', 'string', 'max:255'],
+            'sizes.*.stock' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -63,8 +64,12 @@ class ProductController extends Controller
             $data['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
         }
 
+        // Tự tính tổng stock từ các size
+        $sizes = $request->input('sizes', []);
+        $data['stock'] = collect($sizes)->sum(fn ($s) => max(0, (int) ($s['stock'] ?? 0)));
+
         $product = Product::create($data);
-        $this->syncSizes($product, $request->input('sizes', []));
+        $this->syncSizes($product, $sizes);
 
         return redirect()
             ->route('admin.products.index')
@@ -90,10 +95,11 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'price'       => ['required', 'numeric', 'min:0'],
             'sale_price'  => ['nullable', 'numeric', 'min:0', 'lte:price'],
-            'stock'       => ['required', 'integer', 'min:0'],
+            'stock'       => ['nullable', 'integer', 'min:0'],
             'thumbnail'   => ['nullable', 'image', 'max:4096'],
-            'sizes'       => ['nullable', 'array'],
-            'sizes.*.name' => ['nullable', 'string', 'max:255'],
+            'sizes'        => ['nullable', 'array'],
+            'sizes.*.name'  => ['nullable', 'string', 'max:255'],
+            'sizes.*.stock' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -105,8 +111,12 @@ class ProductController extends Controller
             $data['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
         }
 
+        // Tự tính tổng stock từ các size
+        $sizes = $request->input('sizes', []);
+        $data['stock'] = collect($sizes)->sum(fn ($s) => max(0, (int) ($s['stock'] ?? 0)));
+
         $product->update($data);
-        $this->syncSizes($product, $request->input('sizes', []));
+        $this->syncSizes($product, $sizes);
 
         return redirect()
             ->route('admin.products.index')
@@ -188,7 +198,10 @@ class ProductController extends Controller
         $normalized = collect($sizes)
             ->map(function ($size) {
                 $name = trim((string) ($size['name'] ?? ''));
-                return $name !== '' ? ['name' => $name] : null;
+                return $name !== '' ? [
+                    'name'  => $name,
+                    'stock' => max(0, (int) ($size['stock'] ?? 0)),
+                ] : null;
             })
             ->filter()
             ->values()

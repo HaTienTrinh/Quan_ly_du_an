@@ -186,17 +186,34 @@
                 <div class="auth-card">
                     <div class="auth-title">Đăng nhập</div>
 
+                    @if (session('error'))
+                        <p class="mb-3 text-sm" style="color:#dc2626;">{{ session('error') }}</p>
+                    @endif
+
                     <form action="{{ route('login') }}" method="POST">
                         @csrf
 
                         <div class="mb-3">
                             <label for="email">Email</label>
-                            <input type="email" id="email" name="email" class="form-control" placeholder="example@gmail.com" required>
+                            <input type="email" id="email" name="email"
+                                   class="form-control"
+                                   style="@error('email') border-color:#dc2626; @enderror"
+                                   value="{{ old('email') }}"
+                                   placeholder="example@gmail.com">
+                            @error('email')
+                                <p class="mt-1 text-sm" style="color:#dc2626;">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div class="mb-3">
                             <label for="password">Mật khẩu</label>
-                            <input type="password" id="password" name="password" class="form-control" placeholder="Nhập mật khẩu" required>
+                            <input type="password" id="password" name="password"
+                                   class="form-control"
+                                   style="@error('password') border-color:#dc2626; @enderror"
+                                   placeholder="Nhập mật khẩu">
+                            @error('password')
+                                <p class="mt-1 text-sm" style="color:#dc2626;">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div class="mb-3 d-flex justify-content-between align-items-center">
