@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
+use App\Models\Product;
+use App\Models\ProductSize;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -240,6 +242,18 @@ class OrderController extends Controller
             }
 
             $order->update($payload);
+
+            // Hoàn stock
+            $order->loadMissing('items');
+            foreach ($order->items as $item) {
+                if ($item->product_color_id) {
+                    ProductSize::where('id', $item->product_color_id)->increment('stock', $item->quantity);
+                    $totalSizeStock = ProductSize::where('product_id', $item->product_id)->sum('stock');
+                    Product::where('id', $item->product_id)->update(['stock' => $totalSizeStock]);
+                } else {
+                    Product::where('id', $item->product_id)->increment('stock', $item->quantity);
+                }
+            }
 
             $historyNote = 'Quản trị viên hủy đơn. Lý do: ' . $cancelReason;
 

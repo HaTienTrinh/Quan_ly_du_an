@@ -15,7 +15,7 @@
         </h2>
         <p class="text-slate-500 max-w-xl mx-auto">
             Bạn cần tư vấn chọn giày, hỗ trợ đơn hàng hoặc hợp tác? 
-            Đội ngũ Luna luôn sẵn sàng hỗ trợ bạn.
+            Đội ngũ TTM luôn sẵn sàng hỗ trợ bạn.
         </p>
     </section>
 
@@ -74,37 +74,61 @@
                 </div>
             @endif
 
-            <form action="/lien-he" method="POST" class="space-y-6">
+            @if ($errors->any())
+                <div class="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl mb-6">
+                    <ul class="list-disc ps-4 space-y-1 text-sm">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form action="{{ route('contact.store') }}" method="POST" class="space-y-6">
                 @csrf
 
                 <!-- NAME -->
                 <div>
-                    <label class="text-sm font-semibold text-slate-600">Họ và tên</label>
-                    <input type="text" name="name" required
-                        class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-200 bg-white 
-                        focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition">
+                    <label class="text-sm font-semibold text-slate-600">Họ và tên <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" value="{{ old('name', auth()->user()?->name) }}" required
+                        class="w-full mt-2 px-4 py-3 rounded-xl border @error('name') border-red-400 @else border-slate-200 @enderror bg-white focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition">
+                    @error('name')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
                 <!-- EMAIL -->
                 <div>
-                    <label class="text-sm font-semibold text-slate-600">Email</label>
-                    <input type="email" name="email" required
-                        class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-200 bg-white 
-                        focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition">
+                    <label class="text-sm font-semibold text-slate-600">Email <span class="text-red-500">*</span></label>
+                    <input type="email" name="email" value="{{ old('email', auth()->user()?->email) }}" required
+                        class="w-full mt-2 px-4 py-3 rounded-xl border @error('email') border-red-400 @else border-slate-200 @enderror bg-white focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition">
+                    @error('email')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                <!-- PHONE -->
+                <div>
+                    <label class="text-sm font-semibold text-slate-600">Số điện thoại</label>
+                    <input type="text" name="phone" value="{{ old('phone', auth()->user()?->phone) }}"
+                        class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition">
+                </div>
+
+                <!-- SUBJECT -->
+                <div>
+                    <label class="text-sm font-semibold text-slate-600">Tiêu đề</label>
+                    <input type="text" name="subject" value="{{ old('subject') }}"
+                        placeholder="Ví dụ: Hỏi về đơn hàng, tư vấn sản phẩm..."
+                        class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition">
                 </div>
 
                 <!-- MESSAGE -->
                 <div>
-                    <label class="text-sm font-semibold text-slate-600">Nội dung</label>
+                    <label class="text-sm font-semibold text-slate-600">Nội dung <span class="text-red-500">*</span></label>
                     <textarea name="message" rows="5" required
-                        class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-200 bg-white 
-                        focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition"></textarea>
+                        class="w-full mt-2 px-4 py-3 rounded-xl border @error('message') border-red-400 @else border-slate-200 @enderror bg-white focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition">{{ old('message') }}</textarea>
+                    @error('message')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
                 <!-- BUTTON -->
                 <button type="submit"
-                    class="w-full py-3 bg-orange-500 text-white font-bold rounded-xl 
-                    hover:bg-orange-400 transition-all shadow-md hover:shadow-orange-200">
+                    class="w-full py-3 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-400 transition-all shadow-md hover:shadow-orange-200">
                     Gửi liên hệ
                 </button>
 
@@ -112,5 +136,53 @@
         </div>
 
     </section>
+
+    {{-- @auth
+        @if ($myContacts->isNotEmpty())
+        <section class="max-w-7xl mx-auto px-6 lg:px-12 pb-24">
+            <h3 class="text-2xl font-black mb-6">Lịch sử liên hệ của bạn</h3>
+            <div class="space-y-4">
+                @foreach ($myContacts as $contact)
+                    <div class="glass-light rounded-[24px] p-6">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                            <div>
+                                <p class="font-bold text-slate-900">{{ $contact->subject ?: '(Không có tiêu đề)' }}</p>
+                                <p class="text-sm text-slate-400 mt-1">{{ $contact->created_at->format('d/m/Y H:i') }}</p>
+                            </div>
+                            @if ($contact->status === 'replied')
+                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600 border border-emerald-200 flex-shrink-0">
+                                    ✓ Đã phản hồi
+                                </span>
+                            @elseif ($contact->status === 'read')
+                                <span class="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600 border border-blue-200 flex-shrink-0">
+                                    ✓ Đã đọc
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 border border-slate-200 flex-shrink-0">
+                                    Chờ phản hồi
+                                </span>
+                            @endif
+                        </div>
+
+                        <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 mb-4" style="white-space: pre-wrap;">
+                            {{ $contact->message }}
+                        </div>
+
+                        @if ($contact->admin_reply)
+                            <div class="border-t border-slate-200 pt-4">
+                                <p class="text-xs font-semibold uppercase tracking-widest text-orange-500 mb-2">↩ Phản hồi từ Shop TTM</p>
+                                <div class="rounded-xl bg-orange-50 border border-orange-100 px-4 py-3 text-sm text-slate-700" style="white-space: pre-wrap;">
+                                    {{ $contact->admin_reply }}
+                                </div>
+                                <p class="text-xs text-slate-400 mt-2">{{ $contact->replied_at?->format('d/m/Y H:i') }}</p>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
+    @endauth --}}
+
 </main>
 @endsection

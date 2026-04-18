@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\ProductColor;
+use App\Models\ProductSize;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -38,48 +38,49 @@ class CartController extends Controller
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer'],
-            'product_color_id' => ['nullable', 'integer'],
+            'product_size_id' => ['nullable', 'integer'],
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
-        $product = Product::with('colors')->find((int) $validated['product_id']);
+        $product = Product::with('sizes')->find((int) $validated['product_id']);
 
         if (! $product) {
             return back()->with('error', 'Sản phẩm không tồn tại');
         }
 
-        $productColor = $this->resolveProductColor($product, $validated['product_color_id'] ?? null);
+        $productSize = $this->resolveProductSize($product, $validated['product_size_id'] ?? null);
 
-        if ($product->colors->filter(fn($c) => $c->size)->isNotEmpty() && ! $productColor) {
+        if ($product->sizes->isNotEmpty() && ! $productSize) {
             return back()->withErrors([
-                'product_color_id' => 'Vui lòng chọn size trước khi thêm vào giỏ hàng.',
+                'product_size_id' => 'Vui lòng chọn size trước khi thêm vào giỏ hàng.',
             ])->withInput();
         }
 
         $quantity = (int) $validated['quantity'];
         $cart = Session::get('cart', []);
-        $itemKey = $this->buildCartItemKey($product->id, $productColor?->id);
+        $itemKey = $this->buildCartItemKey($product->id, $productSize?->id);
         $currentQuantity = (int) ($cart[$itemKey]['quantity'] ?? 0);
         $nextQuantity = $currentQuantity + $quantity;
 
-        if ($nextQuantity > $product->stock) {
-            return back()->with('error', 'Số lượng vượt quá tồn kho hiện có của sản phẩm.');
+        // Kiểm tra stock theo size (nếu có chọn size) hoặc stock sản phẩm
+        $availableStock = $productSize ? $productSize->stock : $product->stock;
+
+        if ($nextQuantity > $availableStock) {
+            return back()->with('error', 'Số lượng vượt quá tồn kho hiện có của size này.');
         }
 
         if (isset($cart[$itemKey])) {
             $cart[$itemKey]['quantity'] = $nextQuantity;
         } else {
             $cart[$itemKey] = [
-                'item_key'           => $itemKey,
-                'product_id'         => $product->id,
-                'product_name'       => $product->name,
-                'product_color_id'   => $productColor?->id,
-                'product_color_name' => $productColor?->name,
-                'product_color_hex'  => $productColor?->hex_code,
-                'product_size'       => $productColor?->size,
-                'product_thumbnail'  => $product->thumbnail,
-                'unit_price'         => $product->price,
-                'quantity'           => $quantity,
+                'item_key' => $itemKey,
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'product_color_id' => $productSize?->id,
+                'product_size_name' => $productSize?->name,
+                'product_thumbnail' => $product->thumbnail,
+                'unit_price' => $product->price,
+                'quantity' => $quantity,
             ];
         }
 
@@ -101,10 +102,18 @@ class CartController extends Controller
         if ($quantity <= 0) {
             unset($cart[$productId]);
         } elseif (isset($cart[$productId])) {
-            $product = Product::find($cart[$productId]['product_id']);
+            $sizeId = $cart[$productId]['product_color_id'] ?? null;
+            $availableStock = $product->stock;
 
-            if ($product && $quantity > $product->stock) {
-                return back()->with('error', 'Số lượng vượt quá tồn kho hiện có của sản phẩm.');
+            if ($sizeId) {
+                $size = ProductSize::find($sizeId);
+                if ($size) {
+                    $availableStock = $size->stock;
+                }
+            }
+
+            if ($quantity > $availableStock) {
+                return back()->with('error', 'Số lượng vượt quá tồn kho hiện có của size này.');
             }
 
             $cart[$productId]['quantity'] = $quantity;
@@ -140,17 +149,17 @@ class CartController extends Controller
         return back()->with('success', 'Giỏ hàng đã được xóa trống');
     }
 
-    private function resolveProductColor(Product $product, mixed $productColorId): ?ProductColor
+    private function resolveProductSize(Product $product, mixed $productSizeId): ?ProductSize
     {
-        if (! $productColorId) {
+        if (! $productSizeId) {
             return null;
         }
 
-        return $product->colors->firstWhere('id', (int) $productColorId);
+        return $product->sizes->firstWhere('id', (int) $productSizeId);
     }
 
-    private function buildCartItemKey(int $productId, ?int $productColorId): string
+    private function buildCartItemKey(int $productId, ?int $productSizeId): string
     {
-        return $productId . '-' . ($productColorId ?? 0);
+        return $productId . '-' . ($productSizeId ?? 0);
     }
 }

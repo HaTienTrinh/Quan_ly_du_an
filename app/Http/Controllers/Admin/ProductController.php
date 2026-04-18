@@ -51,11 +51,11 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'price'       => ['required', 'numeric', 'min:0'],
             'sale_price'  => ['nullable', 'numeric', 'min:0', 'lte:price'],
-            'stock'       => ['required', 'integer', 'min:0'],
+            'stock'       => ['nullable', 'integer', 'min:0'],
             'thumbnail'   => ['nullable', 'image', 'max:4096'],
-            'colors'      => ['nullable', 'array'],
-            'colors.*.name' => ['nullable', 'string', 'max:255'],
-            'colors.*.hex_code' => ['nullable', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
+            'sizes'        => ['nullable', 'array'],
+            'sizes.*.name'  => ['nullable', 'string', 'max:255'],
+            'sizes.*.stock' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -64,8 +64,12 @@ class ProductController extends Controller
             $data['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
         }
 
+        // Tự tính tổng stock từ các size
+        $sizes = $request->input('sizes', []);
+        $data['stock'] = collect($sizes)->sum(fn ($s) => max(0, (int) ($s['stock'] ?? 0)));
+
         $product = Product::create($data);
-        $this->syncColors($product, $request->input('colors', []));
+        $this->syncSizes($product, $sizes);
 
         return redirect()
             ->route('admin.products.index')
@@ -78,7 +82,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::where('is_active', true)->orderBy('name')->get();
-        $product->load('colors');
+        $product->load('sizes');
 
         return view('admin.products.edit', compact('product', 'categories'));
     }
@@ -91,11 +95,11 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'price'       => ['required', 'numeric', 'min:0'],
             'sale_price'  => ['nullable', 'numeric', 'min:0', 'lte:price'],
-            'stock'       => ['required', 'integer', 'min:0'],
+            'stock'       => ['nullable', 'integer', 'min:0'],
             'thumbnail'   => ['nullable', 'image', 'max:4096'],
-            'colors'      => ['nullable', 'array'],
-            'colors.*.name' => ['nullable', 'string', 'max:255'],
-            'colors.*.hex_code' => ['nullable', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
+            'sizes'        => ['nullable', 'array'],
+            'sizes.*.name'  => ['nullable', 'string', 'max:255'],
+            'sizes.*.stock' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -107,8 +111,12 @@ class ProductController extends Controller
             $data['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
         }
 
+        // Tự tính tổng stock từ các size
+        $sizes = $request->input('sizes', []);
+        $data['stock'] = collect($sizes)->sum(fn ($s) => max(0, (int) ($s['stock'] ?? 0)));
+
         $product->update($data);
-        $this->syncColors($product, $request->input('colors', []));
+        $this->syncSizes($product, $sizes);
 
         return redirect()
             ->route('admin.products.index')
@@ -117,6 +125,12 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        if ($product->orderItems()->exists()) {
+            return redirect()
+                ->route('admin.products.index')
+                ->with('error', 'Không thể xóa sản phẩm đã có khách mua hàng.');
+        }
+
         $product->delete();
 
         return redirect()
@@ -155,6 +169,12 @@ class ProductController extends Controller
     {
         $product = Product::onlyTrashed()->findOrFail($id);
 
+        if ($product->orderItems()->exists()) {
+            return redirect()
+                ->route('admin.products.trashed')
+                ->with('error', 'Không thể xóa vĩnh viễn sản phẩm đã có khách mua hàng.');
+        }
+
         if ($product->thumbnail && !Str::startsWith($product->thumbnail, ['http://', 'https://'])) {
             Storage::disk('public')->delete($product->thumbnail);
         }
@@ -166,44 +186,31 @@ class ProductController extends Controller
             ->with('success', 'Đã xóa vĩnh viễn sản phẩm «'.$product->name.'».');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Product $product)
     {
-        $product->load(['category', 'colors']);
+        $product->load(['category', 'sizes']);
 
         return view('admin.products.show', compact('product'));
     }
 
-    private function syncColors(Product $product, array $colors): void
+    private function syncSizes(Product $product, array $sizes): void
     {
-        $normalizedColors = collect($colors)
-            ->map(function ($color) {
-                $name = trim((string) ($color['name'] ?? ''));
-                $hexCode = strtoupper(trim((string) ($color['hex_code'] ?? '')));
-
-                if ($name === '') {
-                    return null;
-                }
-
-                if ($hexCode !== '' && ! Str::startsWith($hexCode, '#')) {
-                    $hexCode = '#' . $hexCode;
-                }
-
-                return [
-                    'name' => $name,
-                    'hex_code' => $hexCode !== '' ? $hexCode : null,
-                ];
+        $normalized = collect($sizes)
+            ->map(function ($size) {
+                $name = trim((string) ($size['name'] ?? ''));
+                return $name !== '' ? [
+                    'name'  => $name,
+                    'stock' => max(0, (int) ($size['stock'] ?? 0)),
+                ] : null;
             })
             ->filter()
             ->values()
             ->all();
 
-        $product->colors()->delete();
+        $product->sizes()->delete();
 
-        if ($normalizedColors !== []) {
-            $product->colors()->createMany($normalizedColors);
+        if ($normalized !== []) {
+            $product->sizes()->createMany($normalized);
         }
     }
 }

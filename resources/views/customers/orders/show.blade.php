@@ -40,6 +40,11 @@
         $sortedHistories = $order->statusHistories->sortBy('created_at');
         $reachedStatuses = $sortedHistories->pluck('to_status')->all();
         $canCreateReturnRequest = $order->canBeReturned() && $order->items->contains(fn ($item) => $item->returnRequest === null);
+
+        $deliveredAt = $order->getDeliveredAt();
+        $canReview = $order->status === 'delivered'
+            && $deliveredAt !== null
+            && now()->diffInDays($deliveredAt) <= 7;
     @endphp
 
     <div class="min-h-screen bg-slate-50 pt-12">
@@ -83,6 +88,17 @@
                                 class="rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-200">
                                 Yêu cầu trả hàng
                             </a>
+                        @endif
+
+                        @if ($canReview)
+                            @foreach ($order->items as $item)
+                                @if ($item->product_id)
+                                    <a href="{{ route('products.show', $item->product_id) }}#reviews"
+                                        class="rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-600 transition hover:bg-orange-100">
+                                         Đánh giá
+                                    </a>
+                                @endif
+                            @endforeach
                         @endif
 
                         @if ($order->canBeCancelled())
@@ -187,9 +203,9 @@
 
                                     <div class="flex-1">
                                         <h3 class="font-semibold text-slate-900">{{ $item->product_name }}</h3>
-                                        @if ($item->product_size)
+                                        @if ($item->product_size_name)
                                             <p class="mt-1 text-sm text-slate-500">
-                                                Size: <span class="font-semibold text-slate-700">{{ $item->product_size }}</span>
+                                                Size: {{ $item->product_size_name }}
                                             </p>
                                         @endif
                                         <p class="mt-1 text-sm text-slate-500">

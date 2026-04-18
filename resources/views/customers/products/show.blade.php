@@ -130,22 +130,21 @@
                     @auth
                         <form action="{{ route('cart.add') }}" method="POST" class="mb-8">
                             @csrf
-                            @php
-                                $sizeGroups = $product->colors->filter(fn($c) => $c->size)->groupBy('size');
-                                $noSizeColors = $product->colors->filter(fn($c) => !$c->size);
-                            @endphp
-                            @if ($sizeGroups->isNotEmpty())
+                            @if ($product->sizes->isNotEmpty())
                                 <div class="mb-5">
                                     <label class="mb-3 block font-semibold text-slate-700">Chọn size</label>
-                                    <div class="flex flex-wrap gap-3">
-                                        @foreach ($sizeGroups as $size => $colorsInSize)
+                                    <div class="grid gap-3 sm:grid-cols-2">
+                                        @foreach ($product->sizes as $size)
                                             <label class="cursor-pointer">
-                                                <input type="radio" name="product_color_id"
-                                                    value="{{ $colorsInSize->first()->id }}"
+                                                <input type="radio" name="product_size_id" value="{{ $size->id }}"
                                                     class="peer sr-only"
-                                                    @checked((string) old('product_color_id') === (string) $colorsInSize->first()->id)>
-                                                <span class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-500 peer-checked:text-white hover:border-orange-400">
-                                                    {{ $size }}
+                                                    @checked((string) old('product_size_id') === (string) $size->id)>
+                                                <span
+                                                    class="flex items-center justify-between rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:border-orange-300">
+                                                    <span>{{ $size->name }}</span>
+                                                    <span class="text-xs {{ $size->stock > 0 ? 'text-slate-400' : 'text-red-400' }}">
+                                                        {{ $size->stock > 0 ? 'Còn '.$size->stock : 'Hết hàng' }}
+                                                    </span>
                                                 </span>
                                             </label>
                                         @endforeach

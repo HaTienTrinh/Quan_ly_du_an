@@ -57,10 +57,11 @@
                 </div>
 
                 <div class="col-12 col-md-4">
-                    <label for="stock" class="form-label fw-medium">Tồn kho <span class="text-danger">*</span></label>
+                    <label for="stock" class="form-label fw-medium">Tồn kho</label>
                     <input type="number" name="stock" id="stock" value="{{ old('stock', 0) }}"
-                           class="form-control @error('stock') is-invalid @enderror" required min="0">
-                    @error('stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                           class="form-control bg-light" readonly
+                           title="Tự động tính tổng từ số lượng các size">
+                    <div class="form-text">Tự động cập nhật theo tổng số lượng các size.</div>
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -81,36 +82,40 @@
                 </div>
 
                 @php
-                    $oldColors = old('colors', [['name' => '', 'hex_code' => '#000000']]);
+                    $oldSizes = old('sizes', [['name' => '']]);
                 @endphp
 
                 <div class="col-12">
                     <div class="border rounded-3 p-3">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <label class="form-label fw-medium mb-1">Màu máy</label>
-                                <div class="form-text">Các màu khách có thể chọn khi mua hoặc khi đổi hàng.</div>
+                                <label class="form-label fw-medium mb-1">Size sản phẩm</label>
+                                <div class="form-text">Các size khách có thể chọn khi mua hoặc khi đổi hàng.</div>
                             </div>
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="add-color-row">Thêm màu</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="add-size-row">Thêm size</button>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-7"><small class="text-muted fw-semibold">Tên size</small></div>
+                            <div class="col-md-3"><small class="text-muted fw-semibold">Số lượng</small></div>
                         </div>
 
-                        <div id="color-rows" class="d-flex flex-column gap-2">
-                            @foreach ($oldColors as $index => $color)
-                                <div class="row g-2 align-items-center color-row">
-                                    <div class="col-md-6">
-                                        <input type="text" name="colors[{{ $index }}][name]"
-                                            value="{{ $color['name'] ?? '' }}"
-                                            class="form-control @error('colors.' . $index . '.name') is-invalid @enderror"
-                                            placeholder="Tên màu, ví dụ: Titan tự nhiên">
+                        <div id="size-rows" class="d-flex flex-column gap-2">
+                            @foreach ($oldSizes as $index => $size)
+                                <div class="row g-2 align-items-center size-row">
+                                    <div class="col-md-7">
+                                        <input type="text" name="sizes[{{ $index }}][name]"
+                                            value="{{ $size['name'] ?? '' }}"
+                                            class="form-control @error('sizes.' . $index . '.name') is-invalid @enderror"
+                                            placeholder="Tên size, ví dụ: S, M, L, XL, 38, 39...">
                                     </div>
-                                    <div class="col-md-4">
-                                        <input type="color" name="colors[{{ $index }}][hex_code]"
-                                            value="{{ $color['hex_code'] ?: '#000000' }}"
-                                            class="form-control form-control-color w-100 @error('colors.' . $index . '.hex_code') is-invalid @enderror"
-                                            title="Mã màu">
+                                    <div class="col-md-3">
+                                        <input type="number" name="sizes[{{ $index }}][stock]"
+                                            value="{{ $size['stock'] ?? 0 }}"
+                                            class="form-control @error('sizes.' . $index . '.stock') is-invalid @enderror"
+                                            placeholder="Số lượng" min="0">
                                     </div>
                                     <div class="col-md-2">
-                                        <button type="button" class="btn btn-outline-danger w-100 remove-color-row">Xóa</button>
+                                        <button type="button" class="btn btn-outline-danger w-100 remove-size-row">Xóa</button>
                                     </div>
                                 </div>
                             @endforeach
@@ -128,34 +133,39 @@
         </form>
     </div>
 
-    <template id="color-row-template">
-        <div class="row g-2 align-items-center color-row">
-            <div class="col-md-6">
-                <input type="text" data-field="name" class="form-control" placeholder="Tên màu, ví dụ: Titan tự nhiên">
+    <template id="size-row-template">
+        <div class="row g-2 align-items-center size-row">
+            <div class="col-md-7">
+                <input type="text" data-field="name" class="form-control" placeholder="Tên size, ví dụ: S, M, L, XL, 38, 39...">
             </div>
-            <div class="col-md-4">
-                <input type="color" data-field="hex_code" value="#000000" class="form-control form-control-color w-100" title="Mã màu">
+            <div class="col-md-3">
+                <input type="number" data-field="stock" value="0" class="form-control" placeholder="Số lượng" min="0">
             </div>
             <div class="col-md-2">
-                <button type="button" class="btn btn-outline-danger w-100 remove-color-row">Xóa</button>
+                <button type="button" class="btn btn-outline-danger w-100 remove-size-row">Xóa</button>
             </div>
         </div>
     </template>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const rowsContainer = document.getElementById('color-rows');
-            const template = document.getElementById('color-row-template');
-            const addButton = document.getElementById('add-color-row');
+            const rowsContainer = document.getElementById('size-rows');
+            const template = document.getElementById('size-row-template');
+            const addButton = document.getElementById('add-size-row');
+            const stockInput = document.getElementById('stock');
 
-            if (!rowsContainer || !template || !addButton) {
-                return;
+            function calcTotalStock() {
+                let total = 0;
+                rowsContainer.querySelectorAll('input[type="number"]').forEach(input => {
+                    total += parseInt(input.value) || 0;
+                });
+                stockInput.value = total;
             }
 
             function reindexRows() {
-                Array.from(rowsContainer.querySelectorAll('.color-row')).forEach((row, index) => {
-                    row.querySelector('input[type="text"]').setAttribute('name', `colors[${index}][name]`);
-                    row.querySelector('input[type="color"]').setAttribute('name', `colors[${index}][hex_code]`);
+                Array.from(rowsContainer.querySelectorAll('.size-row')).forEach((row, index) => {
+                    row.querySelector('input[type="text"]').setAttribute('name', `sizes[${index}][name]`);
+                    row.querySelector('input[type="number"]').setAttribute('name', `sizes[${index}][stock]`);
                 });
             }
 
@@ -163,26 +173,32 @@
                 const fragment = template.content.cloneNode(true);
                 rowsContainer.appendChild(fragment);
                 reindexRows();
+                calcTotalStock();
             });
 
             rowsContainer.addEventListener('click', function (event) {
-                if (!event.target.classList.contains('remove-color-row')) {
-                    return;
-                }
+                if (!event.target.classList.contains('remove-size-row')) return;
 
-                const rows = rowsContainer.querySelectorAll('.color-row');
+                const rows = rowsContainer.querySelectorAll('.size-row');
 
                 if (rows.length === 1) {
                     rows[0].querySelector('input[type="text"]').value = '';
-                    rows[0].querySelector('input[type="color"]').value = '#000000';
+                    rows[0].querySelector('input[type="number"]').value = 0;
+                    calcTotalStock();
                     return;
                 }
 
-                event.target.closest('.color-row')?.remove();
+                event.target.closest('.size-row')?.remove();
                 reindexRows();
+                calcTotalStock();
+            });
+
+            rowsContainer.addEventListener('input', function (event) {
+                if (event.target.type === 'number') calcTotalStock();
             });
 
             reindexRows();
+            calcTotalStock();
         });
     </script>
 @endsection

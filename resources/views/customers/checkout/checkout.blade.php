@@ -4,17 +4,21 @@
 
 @section('content')
     @php
-        $addressOptions = $savedAddresses->map(fn ($address) => [
-            'id' => $address->id,
-            'receiver_name' => $address->receiver_name,
-            'phone' => $address->phone,
-            'province' => $address->province,
-            'district' => $address->district,
-            'ward' => $address->ward,
-            'address_detail' => $address->address_detail,
-            'full_address' => $address->full_address,
-            'is_default' => $address->is_default,
-        ])->values();
+        $addressOptions = $savedAddresses
+            ->map(
+                fn($address) => [
+                    'id' => $address->id,
+                    'receiver_name' => $address->receiver_name,
+                    'phone' => $address->phone,
+                    'province' => $address->province,
+                    'district' => $address->district,
+                    'ward' => $address->ward,
+                    'address_detail' => $address->address_detail,
+                    'full_address' => $address->full_address,
+                    'is_default' => $address->is_default,
+                ],
+            )
+            ->values();
 
         $selectedAddressId = old('address_id', $selectedAddress?->id);
     @endphp
@@ -61,18 +65,22 @@
                             </div>
 
                             @if ($selectedAddress)
-                                <details class="group rounded-2xl border border-slate-200 bg-slate-50 p-4" {{ $errors->any() ? 'open' : '' }}>
+                                <details class="group rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                                    {{ $errors->any() ? 'open' : '' }}>
                                     <summary class="flex cursor-pointer list-none items-start justify-between gap-4">
                                         <div class="space-y-2">
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <p id="selected_address_name" class="font-semibold text-slate-900">{{ old('receiver_name', $selectedAddress->receiver_name) }}</p>
+                                                <p id="selected_address_name" class="font-semibold text-slate-900">
+                                                    {{ old('receiver_name', $selectedAddress->receiver_name) }}</p>
                                                 @if ($selectedAddress->is_default)
-                                                    <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                                    <span
+                                                        class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                                                         Mặc định
                                                     </span>
                                                 @endif
                                             </div>
-                                            <p id="selected_address_phone" class="text-sm text-slate-600">{{ old('receiver_phone', $selectedAddress->phone) }}</p>
+                                            <p id="selected_address_phone" class="text-sm text-slate-600">
+                                                {{ old('receiver_phone', $selectedAddress->phone) }}</p>
                                             <p id="selected_address_full" class="text-sm text-slate-500">
                                                 {{ old('receiver_address_detail', $selectedAddress->address_detail) }},
                                                 {{ old('receiver_ward', $selectedAddress->ward) }},
@@ -81,23 +89,27 @@
                                             </p>
                                         </div>
 
-                                        <span class="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                                        <span
+                                            class="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
                                             Xem địa chỉ khác
                                         </span>
                                     </summary>
 
                                     <div class="mt-5 space-y-3 border-t border-slate-200 pt-5">
                                         @foreach ($savedAddresses as $address)
-                                            <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-orange-300 hover:bg-orange-50/50">
+                                            <label
+                                                class="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-orange-300 hover:bg-orange-50/50">
                                                 <input type="radio" name="address_id" value="{{ $address->id }}"
                                                     class="mt-1 h-4 w-4 border-slate-300 text-orange-500 focus:ring-orange-500"
                                                     {{ (string) $selectedAddressId === (string) $address->id ? 'checked' : '' }}>
 
                                                 <div class="flex-1">
                                                     <div class="flex flex-wrap items-center gap-2">
-                                                        <p class="font-semibold text-slate-900">{{ $address->receiver_name }}</p>
+                                                        <p class="font-semibold text-slate-900">
+                                                            {{ $address->receiver_name }}</p>
                                                         @if ($address->is_default)
-                                                            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                                            <span
+                                                                class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                                                                 Mặc định
                                                             </span>
                                                         @endif
@@ -110,15 +122,17 @@
                                     </div>
                                 </details>
                             @else
-                                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-                                    Bạn chưa có địa chỉ mặc định. Hãy vào trang profile để thêm địa chỉ nhận hàng trước khi thanh toán.
+                                <div
+                                    class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+                                    Bạn chưa có địa chỉ mặc định. Hãy vào trang profile để thêm địa chỉ nhận hàng trước khi
+                                    thanh toán.
                                 </div>
                             @endif
 
                             <input type="hidden" name="receiver_name" id="receiver_name"
-                                value="{{ old('receiver_name', $selectedAddress->receiver_name ?? $user->name ?? '') }}">
+                                value="{{ old('receiver_name', $selectedAddress->receiver_name ?? ($user->name ?? '')) }}">
                             <input type="hidden" name="receiver_phone" id="receiver_phone"
-                                value="{{ old('receiver_phone', $selectedAddress->phone ?? $user->phone ?? '') }}">
+                                value="{{ old('receiver_phone', $selectedAddress->phone ?? ($user->phone ?? '')) }}">
                             <input type="hidden" name="receiver_province" id="receiver_province"
                                 value="{{ old('receiver_province', $selectedAddress->province ?? '') }}">
                             <input type="hidden" name="receiver_district" id="receiver_district"
@@ -133,22 +147,32 @@
                             <h2 class="mb-6 text-xl font-bold text-slate-900">Phương thức thanh toán</h2>
 
                             <div class="space-y-3">
-                                <label class="flex cursor-pointer items-center rounded-lg border p-4 hover:border-orange-500">
+                                <label
+                                    class="flex cursor-pointer items-center rounded-lg border p-4 hover:border-orange-500">
                                     <input type="radio" name="payment_method" value="cash" class="accent-orange-500"
                                         {{ old('payment_method', 'cash') == 'cash' ? 'checked' : '' }}>
                                     <span class="ml-3 text-slate-700">Thanh toán khi nhận hàng</span>
                                 </label>
 
-                                <label class="flex cursor-pointer items-center rounded-lg border p-4 hover:border-orange-500">
+                                {{-- <label class="flex cursor-pointer items-center rounded-lg border p-4 hover:border-orange-500">
                                     <input type="radio" name="payment_method" value="credit_card" class="accent-orange-500"
                                         {{ old('payment_method') == 'credit_card' ? 'checked' : '' }}>
                                     <span class="ml-3 text-slate-700">Thẻ tín dụng</span>
-                                </label>
+                                </label> --}}
 
-                                <label class="flex cursor-pointer items-center rounded-lg border p-4 hover:border-orange-500">
-                                    <input type="radio" name="payment_method" value="bank_transfer" class="accent-orange-500"
-                                        {{ old('payment_method') == 'bank_transfer' ? 'checked' : '' }}>
-                                    <span class="ml-3 text-slate-700">Chuyển khoản</span>
+                                <label
+                                    class="flex cursor-pointer items-center rounded-lg border p-4 hover:border-orange-500">
+
+                                    <input type="radio" name="payment_method" value="vnpay" class="accent-orange-500"
+                                        {{ old('payment_method') == 'vnpay' ? 'checked' : '' }}>
+                                    <span class="ml-3 text-slate-700">Thanh toán qua VNPAY</span>
+                                    {{-- <form action="{{ url('/vnpay_payment') }}" method="post">
+                                        @csrf
+                                        <input type="hidden" name="total_vnpay" value="{{ $totalAmount }}">
+                                        <button type="submit" class="btn btn-success check_out" name="redirect">Thanh toán
+                                            VNPAY</button>
+                                    </form> --}}
+
                                 </label>
                             </div>
                         </div>
@@ -181,8 +205,8 @@
                             <div class="mb-3 flex justify-between text-sm">
                                 <div>
                                     <p class="font-medium text-slate-800">{{ $item['product_name'] }}</p>
-                                    @if (! empty($item['product_size']))
-                                        <p class="text-slate-500">Size: <span class="font-semibold text-slate-700">{{ $item['product_size'] }}</span></p>
+                                    @if (!empty($item['product_size_name']))
+                                        <p class="text-slate-500">Size: {{ $item['product_size_name'] }}</p>
                                     @endif
                                     <p class="text-slate-500">x{{ $item['quantity'] }}</p>
                                 </div>
@@ -217,7 +241,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const addressMap = @json($addressOptions);
             const addressLookup = Object.fromEntries(addressMap.map(address => [String(address.id), address]));
             const radioButtons = document.querySelectorAll('input[name="address_id"]');
@@ -240,7 +264,7 @@
             function applyAddress(addressId) {
                 const address = addressLookup[String(addressId)];
 
-                if (! address) {
+                if (!address) {
                     return;
                 }
 
@@ -265,7 +289,7 @@
             }
 
             radioButtons.forEach((radioButton) => {
-                radioButton.addEventListener('change', function () {
+                radioButton.addEventListener('change', function() {
                     applyAddress(this.value);
                 });
             });

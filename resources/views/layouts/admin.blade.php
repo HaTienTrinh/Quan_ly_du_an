@@ -246,6 +246,14 @@
         @else
             <span class="admin-nav-link disabled"><i class="bi bi-newspaper"></i> Bài viết</span>
         @endif
+        @if(Route::has('admin.contacts.index'))
+            <a href="{{ route('admin.contacts.index') }}" class="admin-nav-link {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}">
+                <i class="bi bi-envelope"></i>
+                Liên hệ
+            </a>
+        @else
+            <span class="admin-nav-link disabled"><i class="bi bi-newspaper"></i> Bài viết</span>
+        @endif
         @if(Route::has('admin.users.index'))
             <a href="{{ route('admin.users.index') }}" class="admin-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                 <i class="bi bi-people"></i>

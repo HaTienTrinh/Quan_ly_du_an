@@ -113,6 +113,12 @@
                     </div>
                 @endif
             </section>
+
+            @if ($posts->hasPages())
+                <div class="mt-12 flex justify-center">
+                    {{ $posts->links('pagination::simple-tailwind') }}
+                </div>
+            @endif
         </div>
     </main>
 @endsection

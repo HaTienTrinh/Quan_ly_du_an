@@ -99,8 +99,7 @@ class DatabaseSeeder extends Seeder
                 'receiver_phone' => '0901234567',
                 'created_at' => now()->subDays(4),
                 'items' => [
-                    ['index' => 0, 'quantity' => 1],
-                    ['index' => 1, 'quantity' => 2],
+                    ['index' => 0, 'quantity' => 1],['index' => 1, 'quantity' => 2],
                 ],
             ],
             [
@@ -173,8 +172,7 @@ class DatabaseSeeder extends Seeder
             ], true);
 
             $order = Order::create([
-                'order_code' => $sampleOrder['order_code'],
-                'user_id' => $customer->id,
+                'order_code' => $sampleOrder['order_code'],'user_id' => $customer->id,
                 'receiver_name' => $sampleOrder['receiver_name'],
                 'receiver_phone' => $sampleOrder['receiver_phone'],
                 'receiver_province' => 'Hồ Chí Minh',
@@ -230,8 +228,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'minhanh@example.com',
                 'password' => Hash::make('password'),
                 'role' => 'customer',
-                'phone' => '0945678901',
-                'is_active' => true,
+                'phone' => '0945678901','is_active' => true,
             ]),
             User::create([
                 'name' => 'Hai Nam',

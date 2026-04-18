@@ -56,8 +56,8 @@
 
                                 <div class="flex-1">
                                     <p class="font-semibold text-slate-900">{{ $item->product_name }}</p>
-                                    @if ($item->product_size)
-                                        <p class="mt-1 text-sm text-slate-500">Size: <span class="font-semibold text-slate-700">{{ $item->product_size }}</span></p>
+                                    @if ($item->product_size_name)
+                                        <p class="mt-1 text-sm text-slate-500">Size: {{ $item->product_size_name }}</p>
                                     @endif
                                     <p class="mt-1 text-sm text-slate-500">
                                         Số lượng: {{ $item->quantity }} · Giá mua:
@@ -89,25 +89,22 @@
                         </label>
                     </div>
 
-                    {{-- Phần chọn màu/size — chỉ hiện khi chọn exchange VÀ sản phẩm có biến thể --}}
+                    {{-- Phần chọn size — chỉ hiện khi chọn exchange VÀ sản phẩm có size --}}
                     <div id="exchangeColorSection" class="mt-5 hidden">
                         <p class="mb-3 font-semibold text-slate-700">Chọn size muốn đổi sang</p>
                         <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                             @foreach ($eligibleItems as $item)
-                                @php
-                                    $sizeGroups = $item->product?->colors->filter(fn($c) => $c->size)->groupBy('size') ?? collect();
-                                @endphp
-                                @if ($sizeGroups->isNotEmpty())
+                                @if ($item->product && $item->product->sizes->isNotEmpty())
                                     <div class="color-options" data-item-id="{{ $item->id }}" style="display:none">
-                                        @foreach ($sizeGroups as $size => $colorsInSize)
-                                            <label class="flex cursor-pointer items-center justify-center rounded-xl border border-slate-200 p-3 transition hover:border-orange-300">
+                                        @foreach ($item->product->sizes as $size)
+                                            <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-orange-300">
                                                 <input type="radio" name="exchange_color_id"
-                                                    value="{{ $colorsInSize->first()->id }}"
-                                                    class="color-radio sr-only"
+                                                    value="{{ $size->id }}"
+                                                    class="color-radio h-4 w-4 text-orange-500"
                                                     disabled
-                                                    @checked((int) old('exchange_color_id') === $colorsInSize->first()->id)>
-                                                <span class="text-sm font-bold text-slate-800 peer-checked:text-orange-500">
-                                                    {{ $size }}
+                                                    @checked((int) old('exchange_color_id') === $size->id)>
+                                                <span class="text-sm font-medium text-slate-800">
+                                                    {{ $size->name }}
                                                 </span>
                                             </label>
                                         @endforeach
@@ -118,7 +115,7 @@
                             @endforeach
                         </div>
                         <p id="noVariantMsg" class="hidden mt-2 text-sm text-slate-500 italic">
-                            Sản phẩm này không có biến thể — sẽ đổi đúng loại đã mua.
+                            Sản phẩm này không có size — sẽ đổi đúng loại đã mua.
                         </p>
                         @error('exchange_color_id')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>

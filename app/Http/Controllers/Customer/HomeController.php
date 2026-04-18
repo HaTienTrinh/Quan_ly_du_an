@@ -147,10 +147,16 @@ class HomeController extends Controller
 
     public function contact()
     {
-        return view('customers.contact');
+        $myContacts = Auth::check()
+            ? \App\Models\Contact::where('user_id', Auth::id())
+                ->latest()
+                ->get()
+            : collect();
+
+        return view('customers.contact', compact('myContacts'));
     }
 
-    public function post()
+        public function post(Request $request)
     {
         $featuredPost = Post::query()
             ->published()
@@ -161,8 +167,10 @@ class HomeController extends Controller
         $posts = Post::query()
             ->published()
             ->with('author')
+            ->when($featuredPost, fn ($q) => $q->where('id', '!=', $featuredPost->id))
             ->orderByDesc('published_at')
-            ->get();
+            ->paginate(9)
+            ->withQueryString();
 
         return view('customers.posts.index', compact('featuredPost', 'posts'));
     }

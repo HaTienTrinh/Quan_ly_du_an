@@ -137,6 +137,12 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
+        if ($post->comments()->exists()) {
+            return redirect()
+                ->route('admin.posts.index')
+                ->with('error', 'Không thể xóa bài viết đã có bình luận.');
+        }
+
         $post->delete();
 
         return redirect()
@@ -174,6 +180,12 @@ class PostController extends Controller
     public function forceDestroy(int $id)
     {
         $post = Post::onlyTrashed()->findOrFail($id);
+
+        if ($post->comments()->exists()) {
+            return redirect()
+                ->route('admin.posts.trashed')
+                ->with('error', 'Không thể xóa vĩnh viễn bài viết đã có bình luận.');
+        }
 
         if ($post->thumbnail && ! Str::startsWith($post->thumbnail, ['http://', 'https://'])) {
             Storage::disk('public')->delete($post->thumbnail);

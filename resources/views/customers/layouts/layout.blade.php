@@ -87,11 +87,18 @@
                         <div class="rounded-2xl border border-white/10 bg-[#0b1016]/80 p-2 shadow-2xl backdrop-blur-md">
                             <a href="{{ route('profile') }}"
                                 class="block rounded-xl px-4 py-3 text-sm text-white transition hover:bg-white/10 hover:text-orange-400">
-                                Xem thông tin cá nhân
+                                Thông tin cá nhân
+                            </a>
+                            <a href="{{ route('contacts.my') }}"
+                                class="flex items-center justify-between rounded-xl px-4 py-3 text-sm text-white transition hover:bg-white/10 hover:text-orange-400">
+                                <span>Liên hệ của tôi</span>
+                                @if ($myContacts->where('status', 'replied')->isNotEmpty())
+                                    <span class="flex h-2 w-2 rounded-full bg-orange-500"></span>
+                                @endif
                             </a>
                             <a href="{{ route('orders.index') }}"
                                 class="mt-2 block rounded-xl px-4 py-3 text-sm text-white transition hover:bg-white/10 hover:text-orange-400">
-                                Xem danh sách đơn hàng của tôi
+                                Đơn hàng của tôi
                             </a>
                         </div>
                     </div>

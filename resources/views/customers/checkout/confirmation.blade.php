@@ -92,8 +92,8 @@
 
                             <div class="flex-1">
                                 <h3 class="font-semibold text-slate-900">{{ $item->product_name }}</h3>
-                                @if ($item->product_size)
-                                    <p class="text-slate-500 text-sm">Size: <span class="font-semibold text-slate-700">{{ $item->product_size }}</span></p>
+                                @if ($item->product_size_name)
+                                    <p class="text-slate-500 text-sm">Size: {{ $item->product_size_name }}</p>
                                 @endif
                                 <p class="text-slate-500 text-sm">
                                     {{ number_format($item->unit_price, 0, ',', '.') }} ₫ x {{ $item->quantity }}
@@ -166,14 +166,21 @@
                     <div>
                         <p class="text-sm text-slate-500">Phương thức</p>
                         <p class="font-semibold">
-                            {{ $order->payment_method }}
+                            {{ $order->payment_label }}
                         </p>
                     </div>
 
                     <div>
                         <p class="text-sm text-slate-500">Trạng thái</p>
                         <p class="font-semibold">
-                            {{ $order->payment_status }}
+                            @php
+                                $paymentStatusLabels = [
+                                    'paid'     => 'Đã thanh toán',
+                                    'unpaid'   => 'Chưa thanh toán',
+                                    'refunded' => 'Đã hoàn tiền',
+                                ];
+                            @endphp
+                            {{ $paymentStatusLabels[$order->payment_status] ?? $order->payment_status }}
                         </p>
                     </div>
                 </div>

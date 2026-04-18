@@ -14,9 +14,7 @@ class OrderItem extends Model
         'product_id',
         'product_color_id',
         'product_name',
-        'product_color_name',
-        'product_color_hex',
-        'product_size',       // Snapshot size tại thời điểm mua
+        'product_size_name',
         'product_thumbnail',
         'unit_price',
         'quantity',
@@ -47,9 +45,15 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function productSize()
+    {
+        return $this->belongsTo(ProductSize::class, 'product_color_id');
+    }
+
+    // Alias giữ tương thích
     public function productColor()
     {
-        return $this->belongsTo(ProductColor::class);
+        return $this->productSize();
     }
 
     public function returnRequest()

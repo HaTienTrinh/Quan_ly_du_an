@@ -139,36 +139,13 @@
 
         .invalid-feedback {
             display: block;
+            color: #dc2626;
+            font-size: 0.85rem;
+            margin-top: 4px;
         }
 
-        /* INPUT ANIMATION (nhẹ) */
-        .form-control {
-            opacity: 0;
-            transform: translateY(10px);
-            animation: inputFade 0.5s forwards;
-        }
-
-        .form-control:nth-child(1) {
-            animation-delay: 0.2s;
-        }
-
-        .form-control:nth-child(2) {
-            animation-delay: 0.3s;
-        }
-
-        .form-control:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        .form-control:nth-child(4) {
-            animation-delay: 0.5s;
-        }
-
-        @keyframes inputFade {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .form-control.is-invalid {
+            border-color: #dc2626;
         }
 
         /* MOBILE */
@@ -208,28 +185,45 @@
 
                         <div class="mb-3">
                             <label>Họ tên</label>
-                            <input type="text" name="name" class="form-control" placeholder="Nguyễn Văn A">
+                            <input type="text" name="name"
+                                   class="form-control @error('name') is-invalid @enderror"
+                                   value="{{ old('name') }}"
+                                   placeholder="Nguyễn Văn A">
+                            @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="mb-3">
                             <label>Email</label>
-                            <input type="email" name="email" class="form-control" placeholder="example@gmail.com">
+                            <input type="email" name="email"
+                                   class="form-control @error('email') is-invalid @enderror"
+                                   value="{{ old('email') }}"
+                                   placeholder="example@gmail.com">
+                            @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="mb-3">
                             <label>Số điện thoại</label>
-                            <input type="text" name="phone" class="form-control" placeholder="0901234567">
+                            <input type="text" name="phone"
+                                   class="form-control @error('phone') is-invalid @enderror"
+                                   value="{{ old('phone') }}"
+                                   placeholder="0901234567">
+                            @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="mb-3">
                             <label>Mật khẩu</label>
-                            <input type="password" name="password" class="form-control" placeholder="Ít nhất 8 ký tự">
+                            <input type="password" name="password"
+                                   class="form-control @error('password') is-invalid @enderror"
+                                   placeholder="Ít nhất 6 ký tự">
+                            @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="mb-4">
                             <label>Xác nhận mật khẩu</label>
-                            <input type="password" name="password_confirmation" class="form-control"
-                                placeholder="Nhập lại mật khẩu">
+                            <input type="password" name="password_confirmation"
+                                   class="form-control @error('password_confirmation') is-invalid @enderror"
+                                   placeholder="Nhập lại mật khẩu">
+                            @error('password_confirmation')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <button class="btn btn-primary w-100">
