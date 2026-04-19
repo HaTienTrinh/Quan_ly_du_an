@@ -12,10 +12,6 @@
 @endsection
 
 @section('content')
-    @if (session('success'))
-        <div class="alert alert-success rounded-3">{{ session('success') }}</div>
-    @endif
-
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
             @if ($contact->status === 'unread')
@@ -70,28 +66,31 @@
                     <i class="bi bi-reply-fill me-2 text-primary"></i>Phản hồi của admin
                 </h3>
 
-                @if ($contact->admin_reply)
-                    <div class="rounded-3 bg-primary-subtle p-3 mb-4" style="white-space: pre-wrap;">{{ $contact->admin_reply }}</div>
-                @endif
-
-                <form action="{{ route('admin.contacts.reply', $contact) }}" method="POST">
-                    @csrf
-                    <div class="mb-3">
-                        <label class="form-label fw-medium">
-                            {{ $contact->admin_reply ? 'Cập nhật phản hồi' : 'Viết phản hồi' }}
-                        </label>
-                        <textarea name="admin_reply" rows="5"
-                            class="form-control @error('admin_reply') is-invalid @enderror"
-                            placeholder="Nhập nội dung phản hồi...">{{ old('admin_reply', $contact->admin_reply) }}</textarea>
-                        @error('admin_reply')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                @if ($contact->status === 'replied')
+                    <div class="rounded-3 bg-success-subtle border border-success-subtle p-3 mb-3" style="white-space: pre-wrap;">
+                        {{ $contact->admin_reply }}
                     </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-reply-fill me-1"></i>
-                        {{ $contact->admin_reply ? 'Cập nhật phản hồi' : 'Lưu phản hồi' }}
-                    </button>
-                </form>
+                    <div class="alert alert-success border-0 rounded-3 small mb-0">
+                        <i class="bi bi-check-circle-fill me-1"></i>
+                        Đã gửi phản hồi lúc <strong>{{ $contact->replied_at?->format('d/m/Y H:i') }}</strong>
+                    </div>
+                @else
+                    <form action="{{ route('admin.contacts.reply', $contact) }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Viết phản hồi</label>
+                            <textarea name="admin_reply" rows="5"
+                                class="form-control @error('admin_reply') is-invalid @enderror"
+                                placeholder="Nhập nội dung phản hồi...">{{ old('admin_reply') }}</textarea>
+                            @error('admin_reply')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-reply-fill me-1"></i>Gửi phản hồi
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
 

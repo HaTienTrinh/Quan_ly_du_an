@@ -89,13 +89,13 @@
                                 class="block rounded-xl px-4 py-3 text-sm text-white transition hover:bg-white/10 hover:text-orange-400">
                                 Thông tin cá nhân
                             </a>
-                            <a href="{{ route('contacts.my') }}"
+                            {{-- <a href="{{ route('contacts.my') }}"
                                 class="flex items-center justify-between rounded-xl px-4 py-3 text-sm text-white transition hover:bg-white/10 hover:text-orange-400">
                                 <span>Liên hệ của tôi</span>
                                 @if ($myContacts->where('status', 'replied')->isNotEmpty())
                                     <span class="flex h-2 w-2 rounded-full bg-orange-500"></span>
                                 @endif
-                            </a>
+                            </a> --}}
                             <a href="{{ route('orders.index') }}"
                                 class="mt-2 block rounded-xl px-4 py-3 text-sm text-white transition hover:bg-white/10 hover:text-orange-400">
                                 Đơn hàng của tôi
