@@ -97,14 +97,13 @@
                 </p>
 
                 <div class="flex flex-wrap gap-5">
-                    <button
-                        class="px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-2xl transition-all orange-shadow uppercase text-sm tracking-widest">
-                        Mua ngay
-                    </button>
-                    <button
-                        class="px-8 py-4 bg-white text-slate-600 border border-slate-200 rounded-2xl hover:bg-slate-100 uppercase text-sm tracking-widest">
+                    <a
+                        href="{{ route('products') }}" class="px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-2xl transition-all orange-shadow uppercase text-sm tracking-widest">Mua
+                        ngay</a>
+                    <a
+                       href="{{ route('posts') }}" class="px-8 py-4 bg-white text-slate-600 border border-slate-200 rounded-2xl hover:bg-slate-100 uppercase text-sm tracking-widest">
                         Tìm hiểu thêm
-                    </button>
+                    </a>
                 </div>
 
                 <div class="grid grid-cols-3 gap-4 pt-8">
@@ -244,10 +243,11 @@
                             @foreach ($reviewGroup as $review)
                                 @php
                                     $reviewerName = $review->user?->name ?? 'Khách hàng';
-                                    $nameParts = preg_split('/\s+/u', trim($reviewerName), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                                    $nameParts =
+                                        preg_split('/\s+/u', trim($reviewerName), -1, PREG_SPLIT_NO_EMPTY) ?: [];
                                     $initials = collect($nameParts)
                                         ->take(2)
-                                        ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
+                                        ->map(fn($part) => mb_strtoupper(mb_substr($part, 0, 1)))
                                         ->implode('');
                                     $reviewContent = filled($review->comment)
                                         ? $review->comment
@@ -276,9 +276,7 @@
 
                                     <div class="flex items-center gap-3 pt-4">
                                         @if ($review->user?->avatar_url)
-                                            <img
-                                                src="{{ $review->user->avatar_url }}"
-                                                alt="{{ $reviewerName }}"
+                                            <img src="{{ $review->user->avatar_url }}" alt="{{ $reviewerName }}"
                                                 class="h-10 w-10 rounded-full object-cover">
                                         @else
                                             <div

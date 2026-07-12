@@ -50,20 +50,34 @@
 
                 <div class="col-12 col-md-6">
                     <label for="role" class="form-label fw-medium">Vai trò <span class="text-danger">*</span></label>
-                    <select name="role" id="role" class="form-select @error('role') is-invalid @enderror" required>
-                        <option value="customer" @selected(old('role', $user->role) === 'customer')>Khách hàng</option>
-                        <option value="admin" @selected(old('role', $user->role) === 'admin')>Quản trị</option>
-                    </select>
-                    @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    @if ($user->id === 1)
+                        <input type="text" class="form-control bg-light" value="Quản trị" readonly>
+                        <div class="form-text text-warning"><i class="bi bi-shield-lock me-1"></i>Tài khoản admin mặc định không thể thay đổi vai trò.</div>
+                    @else
+                        <select name="role" id="role" class="form-select @error('role') is-invalid @enderror" required>
+                            <option value="customer" @selected(old('role', $user->role) === 'customer')>Khách hàng</option>
+                            <option value="admin" @selected(old('role', $user->role) === 'admin')>Quản trị</option>
+                        </select>
+                        @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    @endif
                 </div>
 
                 <div class="col-12 col-md-6 d-flex align-items-center">
-                    <div class="form-check mt-3">
-                        <input type="hidden" name="is_active" value="0">
-                        <input type="checkbox" name="is_active" id="is_active" value="1" class="form-check-input"
-                               @checked(old('is_active', $user->is_active ? '1' : '0') === '1')>
-                        <label class="form-check-label" for="is_active">Tài khoản đang hoạt động</label>
-                    </div>
+                    @if ($user->id === 1)
+                        <div class="mt-3">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                                <i class="bi bi-check-circle me-1"></i>Luôn hoạt động
+                            </span>
+                            <div class="form-text text-warning mt-1"><i class="bi bi-shield-lock me-1"></i>Không thể đình chỉ tài khoản này.</div>
+                        </div>
+                    @else
+                        <div class="form-check mt-3">
+                            <input type="hidden" name="is_active" value="0">
+                            <input type="checkbox" name="is_active" id="is_active" value="1" class="form-check-input"
+                                   @checked(old('is_active', $user->is_active ? '1' : '0') === '1')>
+                            <label class="form-check-label" for="is_active">Tài khoản đang hoạt động</label>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="col-12 col-md-6">

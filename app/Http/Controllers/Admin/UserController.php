@@ -55,14 +55,47 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        // Tài khoản admin mặc định (id=1) không thể bị hạ quyền hoặc đình chỉ
+        if ($user->id === 1) {
+            $data = $request->validate([
+                'name'      => ['required', 'string', 'max:255'],
+                'email'     => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+                'phone'     => ['nullable', 'string', 'max:20'],
+                'birth_date'=> ['nullable', 'date'],
+                'password'  => ['nullable', 'string', 'min:6', 'confirmed'],
+                'avatar'    => ['nullable', 'image', 'max:4096'],
+            ]);
+
+            // Buộc giữ role=admin và is_active=true
+            $data['role']      = 'admin';
+            $data['is_active'] = true;
+
+            if (! $request->filled('password')) {
+                unset($data['password']);
+            }
+
+            if ($request->hasFile('avatar')) {
+                if ($user->avatar && ! Str::startsWith($user->avatar, ['http://', 'https://'])) {
+                    Storage::disk('public')->delete($user->avatar);
+                }
+                $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+            }
+
+            $user->update($data);
+
+            return redirect()
+                ->route('admin.users.index')
+                ->with('success', 'Đã cập nhật tài khoản «'.$user->name.'».');
+        }
+
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'birth_date' => ['nullable', 'date'],
-            'role' => ['required', 'in:admin,customer'],
-            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
-            'avatar' => ['nullable', 'image', 'max:4096'],
+            'name'      => ['required', 'string', 'max:255'],
+            'email'     => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'phone'     => ['nullable', 'string', 'max:20'],
+            'birth_date'=> ['nullable', 'date'],
+            'role'      => ['required', 'in:admin,customer'],
+            'password'  => ['nullable', 'string', 'min:6', 'confirmed'],
+            'avatar'    => ['nullable', 'image', 'max:4096'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -99,6 +132,10 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user)
     {
+        if ($user->id === 1) {
+            return back()->with('error', 'Không thể xóa tài khoản admin mặc định.');
+        }
+
         if ($user->id === $request->user()->id) {
             return back()->with('error', 'Bạn không thể xóa chính tài khoản đang đăng nhập.');
         }

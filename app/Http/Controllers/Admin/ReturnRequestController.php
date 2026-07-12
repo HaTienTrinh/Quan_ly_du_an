@@ -431,7 +431,8 @@ class ReturnRequestController extends Controller
             if ($returnRequest->request_type === ReturnRequest::TYPE_EXCHANGE && ! $returnRequest->replacement_order_id) {
                 $replacementOrder = $this->createReplacementOrder(
                     $returnRequest,
-                    $this->resolveReplacementSize($returnRequest, $validated['replacement_product_color_id'] ?? null)
+                    $this->resolveReplacementSize($returnRequest, $validated['replacement_product_color_id'] ?? null),
+                    'exchange'
                 );
 
                 $returnRequest->update([
@@ -552,5 +553,13 @@ class ReturnRequestController extends Controller
         ]);
 
         return $replacementOrder;
+    }
+
+    private function resolveReplacementSize(ReturnRequest $returnRequest, ?int $sizeId): ?ProductSize
+    {
+        if ($sizeId) {
+            return ProductSize::find($sizeId);
+        }
+        return $returnRequest->exchangeSize;
     }
 }

@@ -8,14 +8,14 @@
     <!-- HEADER -->
     <section class="max-w-7xl mx-auto px-6 lg:px-12 pt-20 pb-16 text-center">
         <span class="text-orange-500 font-bold tracking-[0.3em] text-xs uppercase">
-            Shop TTM
+            Shop TT
         </span>
         <h2 class="text-5xl font-extrabold mt-3 mb-4">
             Liên hệ với chúng tôi
         </h2>
         <p class="text-slate-500 max-w-xl mx-auto">
             Bạn cần tư vấn chọn giày, hỗ trợ đơn hàng hoặc hợp tác? 
-            Đội ngũ TTM luôn sẵn sàng hỗ trợ bạn.
+            Đội ngũ TT luôn sẵn sàng hỗ trợ bạn.
         </p>
     </section>
 
@@ -170,7 +170,7 @@
 
                         @if ($contact->admin_reply)
                             <div class="border-t border-slate-200 pt-4">
-                                <p class="text-xs font-semibold uppercase tracking-widest text-orange-500 mb-2">↩ Phản hồi từ Shop TTM</p>
+                                <p class="text-xs font-semibold uppercase tracking-widest text-orange-500 mb-2">↩ Phản hồi từ Shop TT</p>
                                 <div class="rounded-xl bg-orange-50 border border-orange-100 px-4 py-3 text-sm text-slate-700" style="white-space: pre-wrap;">
                                     {{ $contact->admin_reply }}
                                 </div>

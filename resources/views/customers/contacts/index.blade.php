@@ -9,7 +9,7 @@
         <div class="mb-8 flex items-center justify-between gap-4 flex-wrap">
             <div>
                 <h1 class="text-3xl font-extrabold text-slate-900">Liên hệ của tôi</h1>
-                <p class="mt-2 text-slate-500">Lịch sử các tin nhắn bạn đã gửi và phản hồi từ Shop TTM.</p>
+                <p class="mt-2 text-slate-500">Lịch sử các tin nhắn bạn đã gửi và phản hồi từ Shop TT.</p>
             </div>
             <a href="{{ route('contact') }}"
                 class="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white transition hover:bg-orange-600">
@@ -65,7 +65,7 @@
                         @if ($contact->admin_reply)
                             <div class="mt-4 border-t border-slate-100 pt-4">
                                 <p class="text-xs font-semibold uppercase tracking-widest text-orange-500 mb-2">
-                                    ↩ Phản hồi từ Shop TTM
+                                    ↩ Phản hồi từ Shop TT
                                     <span class="ml-2 font-normal normal-case tracking-normal text-slate-400">
                                         {{ $contact->replied_at?->format('d/m/Y H:i') }}
                                     </span>

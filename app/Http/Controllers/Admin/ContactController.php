@@ -44,6 +44,10 @@ class ContactController extends Controller
 
     public function reply(Request $request, Contact $contact)
     {
+        if ($contact->status === 'replied') {
+            return back()->with('error', 'Không thể sửa phản hồi đã gửi.');
+        }
+
         $validated = $request->validate([
             'admin_reply' => ['required', 'string', 'max:2000'],
         ]);
@@ -54,7 +58,7 @@ class ContactController extends Controller
             'replied_at'  => now(),
         ]);
 
-        return back()->with('success', 'Đã lưu phản hồi thành công.');
+        return back()->with('success', 'Đã gửi phản hồi thành công.');
     }
 
     public function destroy(Contact $contact)

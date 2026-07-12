@@ -10,9 +10,9 @@
 @endsection
 
 @section('content')
-    @if (session('success'))
+    {{-- @if (session('success'))
         <div class="alert alert-success rounded-3">{{ session('success') }}</div>
-    @endif
+    @endif --}}
 
     @if ($unreadCount > 0)
         <div class="alert alert-info rounded-3 small">
