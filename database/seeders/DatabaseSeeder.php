@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
     {
         // ===== USERS =====
         $admin = User::create([
-            'name'       => 'Admin TTM',
-            'email'      => 'admin@ttmshop.vn',
+            'name'       => 'Admin TT',
+            'email'      => 'admin@ttshop.vn',
             'password'   => Hash::make('password'),
             'role'       => 'admin',
             'is_active'  => true,
@@ -309,6 +309,6 @@ class DatabaseSeeder extends Seeder
             . "- Tránh để giày ở nơi ẩm ướt hoặc dưới ánh nắng trực tiếp\n"
             . "- Sử dụng cây giày để giữ form\n\n"
             . "## Kết luận\n\n"
-            . "Đầu tư vào một đôi giày chất lượng là đầu tư cho sức khỏe và phong cách của bạn. Hãy đến TTM Shop để khám phá bộ sưu tập giày chính hãng đa dạng nhất!";
+            . "Đầu tư vào một đôi giày chất lượng là đầu tư cho sức khỏe và phong cách của bạn. Hãy đến TT Shop để khám phá bộ sưu tập giày chính hãng đa dạng nhất!";
     }
 }

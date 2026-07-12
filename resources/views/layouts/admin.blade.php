@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Quản trị') — Shop TTM</title>
+    <title>@yield('title', 'Quản trị') — Shop TT</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -188,9 +188,9 @@
 <aside class="admin-sidebar" id="adminSidebar">
     <div class="admin-brand">
         <a href="{{ route('admin.dashboard') }}" class="text-decoration-none d-flex align-items-center gap-3">
-            <div class="admin-brand-mark">TTM</div>
+            <div class="admin-brand-mark">TT</div>
             <div>
-                <div class="text-white fw-bold lh-sm" style="letter-spacing: -0.02em;">Shop TTM</div>
+                <div class="text-white fw-bold lh-sm" style="letter-spacing: -0.02em;">Shop TT</div>
                 <div class="text-secondary small" style="font-size: 0.7rem; letter-spacing: 0.08em;">ADMIN</div>
             </div>
         </a>

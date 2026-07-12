@@ -103,6 +103,10 @@ class CartController extends Controller
             unset($cart[$productId]);
         } elseif (isset($cart[$productId])) {
             $sizeId = $cart[$productId]['product_color_id'] ?? null;
+            $product = Product::find($cart[$productId]['product_id']);
+            if (! $product) {
+                return back()->with('error', 'Sản phẩm không tồn tại');
+            }
             $availableStock = $product->stock;
 
             if ($sizeId) {

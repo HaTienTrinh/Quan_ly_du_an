@@ -1,6 +1,6 @@
 @extends('customers.layouts.layout')
 
-@section('title', 'Đặt Hàng Thành Công - TTM SHOP')
+@section('title', 'Đặt Hàng Thành Công - TT SHOP')
 
 @section('content')
 <div class="min-h-screen bg-white pt-12">
@@ -20,7 +20,7 @@
             <h1 class="text-3xl md:text-4xl font-extrabold mb-4 text-slate-900">
                 Đặt Hàng Thành Công!
             </h1>
-            <p class="text-slate-600 mb-2">Cảm ơn bạn đã mua sắm tại TTM SHOP</p>
+            <p class="text-slate-600 mb-2">Cảm ơn bạn đã mua sắm tại TT SHOP</p>
             <p class="text-slate-400 text-sm">Chúng tôi sẽ xác nhận đơn hàng sớm nhất</p>
         </div>
 

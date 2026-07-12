@@ -6,7 +6,7 @@
     <main class="bg-slate-50 text-slate-800">
         <section class="mx-auto max-w-7xl px-6 pb-12 pt-20 text-center lg:px-12">
             <span class="text-xs font-bold uppercase tracking-[0.3em] text-orange-500">
-                Shop TTM
+                Shop TT
             </span>
             <h2 class="mt-3 mb-4 text-5xl font-extrabold">
                 Tin tức & Xu hướng

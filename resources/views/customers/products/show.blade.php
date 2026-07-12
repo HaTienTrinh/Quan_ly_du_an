@@ -177,10 +177,10 @@
                             </button>
                         </form>
 
-                        <button
+                        {{-- <button
                             class="w-full rounded-xl border-2 border-slate-300 py-4 font-semibold text-slate-900 transition hover:border-orange-500 hover:text-orange-500">
                             ♥ Thêm vào yêu thích
-                        </button>
+                        </button> --}}
                     @else
                         <a href="{{ route('login') }}"
                             class="block w-full rounded-xl bg-slate-900 py-4 text-center text-lg font-black text-white transition-all duration-300 hover:bg-orange-500">
@@ -192,8 +192,8 @@
                         <div class="flex items-start gap-4">
                             <span class="text-2xl">🚚</span>
                             <div>
-                                <p class="font-semibold text-slate-900">Giao hàng miễn phí</p>
-                                <p class="text-sm text-slate-500">Cho đơn hàng từ 500.000đ</p>
+                                <p class="font-semibold text-slate-900">Giao hàng siêu tốc</p>
+                                <p class="text-sm text-slate-500">Hơn 5000 kho hàng trên toàn quốc</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-4">

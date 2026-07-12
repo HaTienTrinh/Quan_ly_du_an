@@ -87,7 +87,7 @@
                 </a>
             </div>
         </div>
-        <div class="col-lg-4">
+        {{-- <div class="col-lg-4">
             <div class="stat-card p-4 h-100 {{ $stats['unread_contacts'] > 0 ? 'border-danger border-opacity-25' : '' }}"
                  style="{{ $stats['unread_contacts'] > 0 ? 'background:linear-gradient(135deg,#fff5f5 0%,#fff 100%)' : '' }}">
                 <div class="d-flex justify-content-between align-items-start mb-3">
@@ -106,7 +106,7 @@
                     Xem liên hệ
                 </a>
             </div>
-        </div>
+        </div> --}}
     </div>
 
     {{-- Biểu đồ doanh thu --}}

@@ -1,6 +1,6 @@
 @extends('customers.layouts.layout')
 
-@section('title', 'Giỏ Hàng - TTM SHOP')
+@section('title', 'Giỏ Hàng - TT SHOP')
 
 @section('content')
     @php

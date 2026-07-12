@@ -1,6 +1,6 @@
 @extends('customers.layouts.layout')
 
-@section('title', 'Thanh Toán - TTM SHOP')
+@section('title', 'Thanh Toán - TT SHOP')
 
 @section('content')
     @php
@@ -160,20 +160,20 @@
                                     <span class="ml-3 text-slate-700">Thẻ tín dụng</span>
                                 </label> --}}
 
-                                <label
+                                {{-- <label
                                     class="flex cursor-pointer items-center rounded-lg border p-4 hover:border-orange-500">
 
                                     <input type="radio" name="payment_method" value="vnpay" class="accent-orange-500"
                                         {{ old('payment_method') == 'vnpay' ? 'checked' : '' }}>
                                     <span class="ml-3 text-slate-700">Thanh toán qua VNPAY</span>
-                                    {{-- <form action="{{ url('/vnpay_payment') }}" method="post">
+                                    <form action="{{ url('/vnpay_payment') }}" method="post">
                                         @csrf
                                         <input type="hidden" name="total_vnpay" value="{{ $totalAmount }}">
                                         <button type="submit" class="btn btn-success check_out" name="redirect">Thanh toán
                                             VNPAY</button>
-                                    </form> --}}
+                                    </form>
 
-                                </label>
+                                </label> --}}
                             </div>
                         </div>
 

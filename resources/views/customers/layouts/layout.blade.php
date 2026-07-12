@@ -30,10 +30,10 @@
     <nav class="sticky top-0 z-50 flex items-center justify-between bg-[#05070a]/80 px-12 py-6 backdrop-blur-md">
         <div class="flex items-center gap-2">
             <div class="orange-glow flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500">
-                <span class="text-xl font-bold text-black">TTM</span>
+                <span class="text-xl font-bold text-black">TT</span>
             </div>
             <div>
-                <h1 class="text-xl font-extrabold leading-none tracking-tighter">SHOP TTM</h1>
+                <h1 class="text-xl font-extrabold leading-none tracking-tighter">SHOP TT</h1>
                 <p class="text-[10px] tracking-[0.2em] text-gray-400">SNEAKER STUDIO</p>
             </div>
         </div>
@@ -141,9 +141,9 @@
                 <div class="col-span-1 lg:col-span-1">
                     <div class="mb-6 flex items-center gap-2">
                         <div class="orange-glow flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500">
-                            <span class="text-sm font-bold text-black">TTM</span>
+                            <span class="text-sm font-bold text-black">TT</span>
                         </div>
-                        <h1 class="text-lg font-extrabold tracking-tighter">SHOP TTM</h1>
+                        <h1 class="text-lg font-extrabold tracking-tighter">SHOP TT</h1>
                     </div>
                     <p class="mb-6 text-sm leading-relaxed text-gray-400">
                         Mang đến trải nghiệm bước chân êm ái và phong cách thời thượng nhất. Đồng hành cùng bạn trên mọi
